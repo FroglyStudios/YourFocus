@@ -42,5 +42,3 @@ We do no support any updates and fixes. Due to beeing a little project of a stud
 Feel free to pull requests with new features, bug fixes or more and we will take a look on it asap.
 
 Thanks for this journey and the amazing more than 7.500 users in the first week!
-
-Your @maxigoldy
