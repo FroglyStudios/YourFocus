@@ -1,0 +1,33 @@
+YourFocus - Gaming Focus Timer
+
+Stay focused and healthy during your gaming sessions with smart break reminders and exercise suggestions.
+
+KEY FEATURES:
+• Customizable gaming session timers (Pomodoro technique for gamers)
+• Smart break reminders with eye and stretch exercises
+• Steam achievements for maintaining healthy gaming habits
+• Multi-language support (English, German, Spanish, French)
+• Session statistics and progress tracking
+• Discord Rich Presence integration
+• Steam Cloud save synchronization
+
+HEALTH BENEFITS:
+• Prevents gaming fatigue and eye strain
+• Encourages regular breaks and physical movement
+• Helps maintain focus during long gaming sessions
+• Promotes healthy gaming habits
+
+PERFECT FOR:
+• Competitive gamers who need to maintain peak performance
+• Streamers who game for extended periods
+• Anyone who wants to game healthily and responsibly
+
+Take control of your gaming sessions and unlock achievements for building healthy gaming habits!
+
+SYSTEM REQUIREMENTS:
+• Windows 10/11, macOS 10.15+, or Linux Ubuntu 18.04+
+• 100 MB available space
+• Internet connection for Steam features
+
+LANGUAGES SUPPORTED:
+English, Deutsch, Español, Français

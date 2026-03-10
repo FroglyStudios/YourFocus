@@ -1,0 +1,94 @@
+{
+  "achievements": [
+    {
+      "id": "firstLaunch",
+      "name": {
+        "english": "Welcome to YourFocus!",
+        "german": "Willkommen bei YourFocus!",
+        "spanish": "¡Bienvenido a YourFocus!",
+        "french": "Bienvenue sur YourFocus!"
+      },
+      "description": {
+        "english": "You've opened YourFocus for the first time",
+        "german": "Du hast YourFocus zum ersten Mal geöffnet",
+        "spanish": "Has abierto YourFocus por primera vez",
+        "french": "Vous avez ouvert YourFocus pour la première fois"
+      },
+      "icon": "achievement_first_launch.jpg",
+      "icon_gray": "achievement_first_launch_gray.jpg",
+      "hidden": false
+    },
+    {
+      "id": "firstSession",
+      "name": {
+        "english": "First Steps",
+        "german": "Erste Schritte",
+        "spanish": "Primeros Pasos",
+        "french": "Premiers Pas"
+      },
+      "description": {
+        "english": "Completed your first gaming session",
+        "german": "Ihre erste Gaming-Session abgeschlossen",
+        "spanish": "Completaste tu primera sesión de juego",
+        "french": "Terminé votre première session de jeu"
+      },
+      "icon": "achievement_first_session.jpg",
+      "icon_gray": "achievement_first_session_gray.jpg",
+      "hidden": false
+    },
+    {
+      "id": "dedicated",
+      "name": {
+        "english": "Dedicated Gamer",
+        "german": "Engagierter Gamer",
+        "spanish": "Jugador Dedicado",
+        "french": "Joueur Dévoué"
+      },
+      "description": {
+        "english": "Completed 5 gaming sessions",
+        "german": "5 Gaming-Sessions abgeschlossen",
+        "spanish": "Completaste 5 sesiones de juego",
+        "french": "Terminé 5 sessions de jeu"
+      },
+      "icon": "achievement_dedicated.jpg",
+      "icon_gray": "achievement_dedicated_gray.jpg",
+      "hidden": false
+    },
+    {
+      "id": "focused",
+      "name": {
+        "english": "Focused Player",
+        "german": "Fokussierter Spieler",
+        "spanish": "Jugador Concentrado",
+        "french": "Joueur Concentré"
+      },
+      "description": {
+        "english": "Completed 10 gaming sessions",
+        "german": "10 Gaming-Sessions abgeschlossen",
+        "spanish": "Completaste 10 sesiones de juego",
+        "french": "Terminé 10 sessions de jeu"
+      },
+      "icon": "achievement_focused.jpg",
+      "icon_gray": "achievement_focused_gray.jpg",
+      "hidden": false
+    },
+    {
+      "id": "master",
+      "name": {
+        "english": "Focus Master",
+        "german": "Fokus-Meister",
+        "spanish": "Maestro de la Concentración",
+        "french": "Maître de la Concentration"
+      },
+      "description": {
+        "english": "Completed 20 gaming sessions",
+        "german": "20 Gaming-Sessions abgeschlossen",
+        "spanish": "Completaste 20 sesiones de juego",
+        "french": "Terminé 20 sessions de jeu"
+      },
+      "icon": "achievement_master.jpg",
+      "icon_gray": "achievement_master_gray.jpg",
+      "hidden": false
+    }
+  ]
+}
