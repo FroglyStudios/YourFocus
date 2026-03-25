@@ -49,6 +49,14 @@ PERFECT FOR:
 
 • Anyone who wants to play smarter, not harder
 
+
+## Soicals
+YouTube: https://youtube.com/@froglystudios
+
+Instagram: https://instagram.com/froglystudios
+
+Discord: https://discord.gg/TmMqBTKfvv
+
 -------------------------------------------------
 
 ## Source Code
