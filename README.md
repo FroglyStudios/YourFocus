@@ -1,13 +1,59 @@
 # YourFocus
 
-This is the sourcecode for the unbuilded version of [YourFocus](https://store.steampowered.com/app/4037900/YourFocus/).
+![header](https://github.com/user-attachments/assets/9fa76bcc-5745-4dba-aa08-201acb33050b)
 
-![header](https://github.com/user-attachments/assets/4e081f34-393b-4aba-959f-f0aac4781b5d)
+Stay focused and healthy during long gaming sessions with smart break reminders and mini-exercises. 
+
+**Get it now for free at Steam!**
+https://store.steampowered.com/app/4037900/YourFocus/
+
+-------------------------------------------------
+## About YourFocus
+YourFocus is a productivity companion designed specifically for gamers who spend many hours in front of the screen.
+
+It helps you maintain focus, energy, and reaction time during intense gaming sessions by structuring playtime into focus intervals with short recovery phases. Smart reminders and built-in eye and stretching exercises help prevent fatigue, burnout, and eye strain—so you can perform at your best while gaming.
+
+Compete against yourself with achievements, track your progress, and develop lasting healthy gaming habits.
+
+KEY FEATURES:
+
+🎮 Customizable gaming session timers (Pomodoro Technique for gamers)
+
+💪 Smart break reminders with eye and stretching exercises
+
+🏆 Steam achievements for maintaining healthy gaming habits
+
+📊 Session statistics and performance tracking
+
+🌍 Multilingual support (English, German, Spanish, French)
+
+💬 Discord Rich Presence integration
+
+BENEFITS FOR GAMERS:
+
+⚡ Prevents gaming fatigue and eye strain
+
+⚡ Improves focus, accuracy, and consistency
+
+⚡ Encourages regular breaks and physical activity
+
+⚡ Builds long-term, healthy gaming routines
+
+PERFECT FOR:
+
+• Competitive gamers striving for peak performance
+
+• Streamers who play for many hours
+
+• Esports players preparing for tournaments
+
+• Anyone who wants to play smarter, not harder
 
 -------------------------------------------------
 
-## How to get YourFocus?
-Download YourFocus as a setup file for supported platforms, build it your own or download it on steam directly.
+## Source Code
+
+This is the official source code of YourFocus.
 
 ### Build
 #### How to build?
