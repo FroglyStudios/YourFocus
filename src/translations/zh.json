@@ -1,0 +1,112 @@
+{
+  "app": {
+    "title": "YourFocus",
+    "subtitle": "Stay focused and healthy during your gaming sessions with smart break reminders"
+  },
+  "timer": {
+    "breakTime": "Break Time",
+    "gamingSession": "Gaming Session",
+    "focusTime": "Focus Time",
+    "breakRemaining": "Break Remaining",
+    "active": "Active",
+    "paused": "Paused"
+  },
+  "controls": {
+    "startFocus": "Start Focus",
+    "pause": "Pause",
+    "reset": "Reset",
+    "takeBreakNow": "Take Break Now",
+    "backToGaming": "Back to Gaming"
+  },
+  "buttons": {
+    "settings": "Settings",
+    "exercises": "Exercises",
+    "statistics": "Statistics"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "quickPresets": "Quick Presets",
+    "shortGaming": "Short Gaming",
+    "standardGaming": "Standard Gaming",
+    "extendedGaming": "Extended Gaming",
+    "marathonGaming": "Marathon Gaming",
+    "sessionDuration": "Gaming Session Duration (minutes)",
+    "breakDuration": "Break Duration (minutes)",
+    "audioNotifications": "Audio Notifications",
+    "soundEnabled": "Sound alerts enabled",
+    "soundDisabled": "Sound alerts disabled",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "exercises": {
+    "title": "Break Exercises",
+    "subtitle": "These exercises help prevent gaming fatigue and maintain your health during long sessions.",
+    "eyeRule": {
+      "title": "20-20-20 Eye Rule",
+      "description": "Look at something 20 feet away for 20 seconds",
+      "instructions": "Find a window or distant object and focus on it. This helps relax your eye muscles and prevent eye strain."
+    },
+    "neckStretch": {
+      "title": "Neck Stretch",
+      "description": "Gentle neck rotations and stretches",
+      "instructions": "Slowly turn your head left, then right. Tilt your head to each shoulder. Hold each position for 5 seconds."
+    },
+    "shoulderRolls": {
+      "title": "Shoulder Rolls",
+      "description": "Release shoulder tension",
+      "instructions": "Roll your shoulders backward 5 times, then forward 5 times. Lift your shoulders to your ears and release."
+    },
+    "wristStretch": {
+      "title": "Wrist Stretch",
+      "description": "Prevent repetitive strain injury",
+      "instructions": "Extend your arm forward, palm up. Use your other hand to gently pull your fingers back. Hold for 15 seconds each hand."
+    },
+    "markComplete": "Mark Complete",
+    "completed": "Completed!",
+    "greatJob": "Great job! You've completed all exercises.",
+    "backToGaming": "Back to Gaming",
+    "skipForNow": "Skip for Now",
+    "continue": "Continue"
+  },
+  "statistics": {
+    "title": "Your Focus Statistics",
+    "totalSessions": "Total Sessions",
+    "focusTime": "Focus Time",
+    "breakStreak": "Break Streak",
+    "todaySessions": "Today's Sessions",
+    "sessionsCompleted": "gaming sessions completed",
+    "totalTimeFocused": "total time focused",
+    "consecutiveBreaks": "consecutive breaks taken",
+    "sessionsToday": "sessions completed today",
+    "focusInsights": "Focus Insights",
+    "averageSession": "Average Session",
+    "totalBreakTime": "Total Break Time",
+    "totalBreaks": "Total Breaks",
+    "achievements": "Achievements",
+    "firstSessionComplete": "First Session Complete!",
+    "focusBeginner": "Focus Beginner (5+ sessions)",
+    "focusExpert": "Focus Expert (25+ sessions)",
+    "breakChampion": "Break Champion (5+ streak)",
+    "startFirstSession": "Start your first session to unlock achievements!",
+    "close": "Close"
+  },
+  "notifications": {
+    "breakComplete": "Break Complete! 🎮",
+    "breakCompleteBody": "Time to get back to your game. Stay focused!",
+    "sessionComplete": "Session Complete! 🧘‍♂️",
+    "sessionCompleteBody": "Time for a healthy break. Your eyes and body will thank you!"
+  },
+  "achievements": {
+    "firstLaunch": "Welcome to YourFocus!",
+    "firstLaunchDesc": "You've opened YourFocus for the first time",
+    "firstSession": "First Steps",
+    "firstSessionDesc": "Completed your first gaming session",
+    "dedicated": "Dedicated Gamer",
+    "dedicatedDesc": "Completed 5 gaming sessions",
+    "focused": "Focused Player",
+    "focusedDesc": "Completed 10 gaming sessions",
+    "master": "Focus Master",
+    "masterDesc": "Completed 20 gaming sessions"
+  }
+}

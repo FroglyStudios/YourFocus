@@ -1,0 +1,112 @@
+{
+  "app": {
+    "title": "YourFocus",
+    "subtitle": "Bleiben Sie während Ihrer Gaming-Sessions fokussiert und gesund mit intelligenten Pausenerinnerungen"
+  },
+  "timer": {
+    "breakTime": "Pausenzeit",
+    "gamingSession": "Gaming-Session",
+    "focusTime": "Fokuszeit",
+    "breakRemaining": "Pause verbleibend",
+    "active": "Aktiv",
+    "paused": "Pausiert"
+  },
+  "controls": {
+    "startFocus": "Fokus starten",
+    "pause": "Pausieren",
+    "reset": "Zurücksetzen",
+    "takeBreakNow": "Jetzt Pause machen",
+    "backToGaming": "Zurück zum Gaming"
+  },
+  "buttons": {
+    "settings": "Einstellungen",
+    "exercises": "Übungen",
+    "statistics": "Statistiken"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "quickPresets": "Schnelleinstellungen",
+    "shortGaming": "Kurzes Gaming",
+    "standardGaming": "Standard Gaming",
+    "extendedGaming": "Erweitertes Gaming",
+    "marathonGaming": "Marathon Gaming",
+    "sessionDuration": "Gaming-Session Dauer (Minuten)",
+    "breakDuration": "Pausendauer (Minuten)",
+    "audioNotifications": "Audio-Benachrichtigungen",
+    "soundEnabled": "Ton-Benachrichtigungen aktiviert",
+    "soundDisabled": "Ton-Benachrichtigungen deaktiviert",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "exercises": {
+    "title": "Pausenübungen",
+    "subtitle": "Diese Übungen helfen dabei, Gaming-Müdigkeit zu verhindern und Ihre Gesundheit während langer Sessions zu erhalten.",
+    "eyeRule": {
+      "title": "20-20-20 Augenregel",
+      "description": "Schauen Sie 20 Sekunden lang auf etwas in 20 Fuß Entfernung",
+      "instructions": "Finden Sie ein Fenster oder entferntes Objekt und fokussieren Sie darauf. Dies hilft, Ihre Augenmuskeln zu entspannen und Augenbelastung zu verhindern."
+    },
+    "neckStretch": {
+      "title": "Nackendehnung",
+      "description": "Sanfte Nackenrotationen und Dehnungen",
+      "instructions": "Drehen Sie Ihren Kopf langsam nach links, dann nach rechts. Neigen Sie Ihren Kopf zu jeder Schulter. Halten Sie jede Position 5 Sekunden."
+    },
+    "shoulderRolls": {
+      "title": "Schulterkreisen",
+      "description": "Schulterverspannungen lösen",
+      "instructions": "Kreisen Sie Ihre Schultern 5 Mal nach hinten, dann 5 Mal nach vorne. Heben Sie Ihre Schultern zu den Ohren und lassen Sie los."
+    },
+    "wristStretch": {
+      "title": "Handgelenkdehnung",
+      "description": "Repetitive Belastungsverletzungen verhindern",
+      "instructions": "Strecken Sie Ihren Arm nach vorne, Handfläche nach oben. Verwenden Sie Ihre andere Hand, um Ihre Finger sanft nach hinten zu ziehen. 15 Sekunden pro Hand halten."
+    },
+    "markComplete": "Als erledigt markieren",
+    "completed": "Erledigt!",
+    "greatJob": "Großartige Arbeit! Sie haben alle Übungen abgeschlossen.",
+    "backToGaming": "Zurück zum Gaming",
+    "skipForNow": "Vorerst überspringen",
+    "continue": "Weiter"
+  },
+  "statistics": {
+    "title": "Ihre Fokus-Statistiken",
+    "totalSessions": "Gesamte Sessions",
+    "focusTime": "Fokuszeit",
+    "breakStreak": "Pausenserie",
+    "todaySessions": "Heutige Sessions",
+    "sessionsCompleted": "Gaming-Sessions abgeschlossen",
+    "totalTimeFocused": "Gesamte Fokuszeit",
+    "consecutiveBreaks": "aufeinanderfolgende Pausen gemacht",
+    "sessionsToday": "Sessions heute abgeschlossen",
+    "focusInsights": "Fokus-Einblicke",
+    "averageSession": "Durchschnittliche Session",
+    "totalBreakTime": "Gesamte Pausenzeit",
+    "totalBreaks": "Gesamte Pausen",
+    "achievements": "Erfolge",
+    "firstSessionComplete": "Erste Session abgeschlossen!",
+    "focusBeginner": "Fokus-Anfänger (5+ Sessions)",
+    "focusExpert": "Fokus-Experte (25+ Sessions)",
+    "breakChampion": "Pausen-Champion (5+ Serie)",
+    "startFirstSession": "Starten Sie Ihre erste Session, um Erfolge freizuschalten!",
+    "close": "Schließen"
+  },
+  "notifications": {
+    "breakComplete": "Pause beendet! 🎮",
+    "breakCompleteBody": "Zeit, zu Ihrem Spiel zurückzukehren. Bleiben Sie fokussiert!",
+    "sessionComplete": "Session beendet! 🧘‍♂️",
+    "sessionCompleteBody": "Zeit für eine gesunde Pause. Ihre Augen und Ihr Körper werden es Ihnen danken!"
+  },
+  "achievements": {
+    "firstLaunch": "Willkommen bei YourFocus!",
+    "firstLaunchDesc": "Sie haben YourFocus zum ersten Mal geöffnet",
+    "firstSession": "Erste Schritte",
+    "firstSessionDesc": "Ihre erste Gaming-Session abgeschlossen",
+    "dedicated": "Engagierter Gamer",
+    "dedicatedDesc": "5 Gaming-Sessions abgeschlossen",
+    "focused": "Fokussierter Spieler",
+    "focusedDesc": "10 Gaming-Sessions abgeschlossen",
+    "master": "Fokus-Meister",
+    "masterDesc": "20 Gaming-Sessions abgeschlossen"
+  }
+}

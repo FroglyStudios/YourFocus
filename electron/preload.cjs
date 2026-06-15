@@ -32,6 +32,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   steam: {
     isAvailable: () => true,
     unlockAchievement: (achievementId) => ipcRenderer.invoke('unlock-achievement', achievementId)
+  },
+  
+  // Mini Overlay mode
+  mini: {
+    toggle: () => ipcRenderer.invoke('toggle-mini-mode'),
+    close: () => ipcRenderer.invoke('close-mini-mode'),
+    updateTimer: (state) => ipcRenderer.send('update-mini-timer', state),
+    onTimerUpdate: (callback) => ipcRenderer.on('sync-mini-timer', (_event, state) => callback(state))
   }
 });
 

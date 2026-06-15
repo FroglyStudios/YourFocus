@@ -1,0 +1,12 @@
+{
+  "name": "Standard Glass",
+  "colors": {
+    "--theme-bg": "#0f172a",
+    "--theme-surface": "rgba(30, 41, 59, 0.6)",
+    "--theme-border": "rgba(51, 65, 85, 0.5)",
+    "--theme-text": "#f8fafc",
+    "--theme-muted": "#94a3b8",
+    "--theme-primary": "#3b82f6",
+    "--theme-primary-hover": "#60a5fa"
+  }
+}

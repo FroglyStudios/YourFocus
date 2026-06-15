@@ -1,0 +1,112 @@
+{
+  "app": {
+    "title": "YourFocus",
+    "subtitle": "Restez concentré et en bonne santé pendant vos sessions de jeu avec des rappels de pause intelligents"
+  },
+  "timer": {
+    "breakTime": "Temps de Pause",
+    "gamingSession": "Session de Jeu",
+    "focusTime": "Temps de Concentration",
+    "breakRemaining": "Pause Restante",
+    "active": "Actif",
+    "paused": "En Pause"
+  },
+  "controls": {
+    "startFocus": "Commencer la Concentration",
+    "pause": "Pause",
+    "reset": "Réinitialiser",
+    "takeBreakNow": "Prendre une Pause Maintenant",
+    "backToGaming": "Retour au Jeu"
+  },
+  "buttons": {
+    "settings": "Paramètres",
+    "exercises": "Exercices",
+    "statistics": "Statistiques"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "quickPresets": "Préréglages Rapides",
+    "shortGaming": "Jeu Court",
+    "standardGaming": "Jeu Standard",
+    "extendedGaming": "Jeu Étendu",
+    "marathonGaming": "Jeu Marathon",
+    "sessionDuration": "Durée de Session de Jeu (minutes)",
+    "breakDuration": "Durée de la Pause (minutes)",
+    "audioNotifications": "Notifications Audio",
+    "soundEnabled": "Alertes sonores activées",
+    "soundDisabled": "Alertes sonores désactivées",
+    "cancel": "Annuler",
+    "save": "Sauvegarder"
+  },
+  "exercises": {
+    "title": "Exercices de Pause",
+    "subtitle": "Ces exercices aident à prévenir la fatigue du jeu et à maintenir votre santé pendant les longues sessions.",
+    "eyeRule": {
+      "title": "Règle 20-20-20 pour les Yeux",
+      "description": "Regardez quelque chose à 20 pieds pendant 20 secondes",
+      "instructions": "Trouvez une fenêtre ou un objet distant et concentrez-vous dessus. Cela aide à détendre les muscles des yeux et à prévenir la fatigue oculaire."
+    },
+    "neckStretch": {
+      "title": "Étirement du Cou",
+      "description": "Rotations et étirements doux du cou",
+      "instructions": "Tournez lentement votre tête à gauche, puis à droite. Inclinez votre tête vers chaque épaule. Maintenez chaque position pendant 5 secondes."
+    },
+    "shoulderRolls": {
+      "title": "Rotations des Épaules",
+      "description": "Relâchez la tension des épaules",
+      "instructions": "Roulez vos épaules vers l'arrière 5 fois, puis vers l'avant 5 fois. Levez vos épaules vers vos oreilles et relâchez."
+    },
+    "wristStretch": {
+      "title": "Étirement du Poignet",
+      "description": "Prévenez les blessures par effort répétitif",
+      "instructions": "Étendez votre bras vers l'avant, paume vers le haut. Utilisez votre autre main pour tirer doucement vos doigts vers l'arrière. Maintenez pendant 15 secondes chaque main."
+    },
+    "markComplete": "Marquer Terminé",
+    "completed": "Terminé !",
+    "greatJob": "Excellent travail ! Vous avez terminé tous les exercices.",
+    "backToGaming": "Retour au Jeu",
+    "skipForNow": "Ignorer pour l'instant",
+    "continue": "Continuer"
+  },
+  "statistics": {
+    "title": "Vos Statistiques de Concentration",
+    "totalSessions": "Sessions Totales",
+    "focusTime": "Temps de Concentration",
+    "breakStreak": "Série de Pauses",
+    "todaySessions": "Sessions d'Aujourd'hui",
+    "sessionsCompleted": "sessions de jeu terminées",
+    "totalTimeFocused": "temps total concentré",
+    "consecutiveBreaks": "pauses consécutives prises",
+    "sessionsToday": "sessions terminées aujourd'hui",
+    "focusInsights": "Aperçus de Concentration",
+    "averageSession": "Session Moyenne",
+    "totalBreakTime": "Temps Total de Pause",
+    "totalBreaks": "Pauses Totales",
+    "achievements": "Réalisations",
+    "firstSessionComplete": "Première Session Terminée !",
+    "focusBeginner": "Débutant en Concentration (5+ sessions)",
+    "focusExpert": "Expert en Concentration (25+ sessions)",
+    "breakChampion": "Champion des Pauses (5+ série)",
+    "startFirstSession": "Commencez votre première session pour débloquer des réalisations !",
+    "close": "Fermer"
+  },
+  "notifications": {
+    "breakComplete": "Pause Terminée ! 🎮",
+    "breakCompleteBody": "Il est temps de retourner à votre jeu. Restez concentré !",
+    "sessionComplete": "Session Terminée ! 🧘‍♂️",
+    "sessionCompleteBody": "Il est temps pour une pause saine. Vos yeux et votre corps vous remercieront !"
+  },
+  "achievements": {
+    "firstLaunch": "Bienvenue sur YourFocus !",
+    "firstLaunchDesc": "Vous avez ouvert YourFocus pour la première fois",
+    "firstSession": "Premiers Pas",
+    "firstSessionDesc": "Terminé votre première session de jeu",
+    "dedicated": "Joueur Dévoué",
+    "dedicatedDesc": "Terminé 5 sessions de jeu",
+    "focused": "Joueur Concentré",
+    "focusedDesc": "Terminé 10 sessions de jeu",
+    "master": "Maître de la Concentration",
+    "masterDesc": "Terminé 20 sessions de jeu"
+  }
+}
