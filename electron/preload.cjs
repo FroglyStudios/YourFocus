@@ -31,7 +31,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Steam integration
   steam: {
     isAvailable: () => true,
-    unlockAchievement: (achievementId) => ipcRenderer.invoke('unlock-achievement', achievementId)
+    unlockAchievement: (achievementId) => ipcRenderer.invoke('unlock-achievement', achievementId),
+    getWorkshopThemes: () => ipcRenderer.invoke('get-workshop-themes'),
+    uploadWorkshopTheme: (filePath, title, description) => ipcRenderer.invoke('upload-workshop-theme', filePath, title, description)
   },
   
   // Mini Overlay mode

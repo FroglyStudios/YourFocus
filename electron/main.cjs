@@ -295,6 +295,79 @@ ipcMain.on('update-mini-timer', (event, state) => {
     miniWindow.webContents.send('sync-mini-timer', state);
   }
 });
+// Steam Workshop handlers
+ipcMain.handle('get-workshop-themes', async () => {
+  if (!steamClient || !steamClient.workshop) return [];
+  
+  try {
+    const items = steamClient.workshop.getSubscribedItems();
+    const themes = [];
+    
+    for (const itemId of items) {
+      const info = steamClient.workshop.installInfo(itemId);
+      if (info && info.folder) {
+        // Read folder for .json files
+        const files = fs.readdirSync(info.folder);
+        for (const file of files) {
+          if (file.endsWith('.json')) {
+            try {
+              const content = fs.readFileSync(path.join(info.folder, file), 'utf8');
+              const theme = JSON.parse(content);
+              if (theme.colors && theme.colors['--theme-bg']) {
+                theme.workshopId = itemId.toString(); // Store ID to know it's from workshop
+                themes.push(theme);
+              }
+            } catch (err) {
+              console.error('Error reading theme from workshop', err);
+            }
+          }
+        }
+      }
+    }
+    return themes;
+  } catch (error) {
+    console.error('Error fetching workshop themes:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('upload-workshop-theme', async (event, filePath, title, description) => {
+  if (!steamClient || !steamClient.workshop) throw new Error('Steam not running');
+  
+  try {
+    // 1. Create item
+    const appId = steamClient.utils.getAppId();
+    const result = await steamClient.workshop.createItem(appId);
+    
+    // 2. Create temp folder for content
+    const tempDir = path.join(app.getPath('userData'), 'temp_workshop_upload');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    
+    // Copy the file to temp folder as theme.json
+    const destPath = path.join(tempDir, 'theme.json');
+    fs.copyFileSync(filePath, destPath);
+    
+    // 3. Update item
+    await steamClient.workshop.updateItem(result.itemId, {
+      title,
+      description,
+      contentPath: tempDir,
+      tags: ['Theme'],
+      visibility: 0 // Public
+    });
+    
+    // Clean up
+    fs.unlinkSync(destPath);
+    fs.rmdirSync(tempDir);
+    
+    return true;
+  } catch (error) {
+    console.error('Error uploading to workshop:', error);
+    throw error;
+  }
+});
 
 // Discord RPC handlers
 ipcMain.handle('discord-connect', async (event, clientId) => {

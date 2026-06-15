@@ -111,6 +111,41 @@ class ThemeService {
       reader.readAsText(file);
     });
   }
+
+  public async fetchWorkshopThemes(): Promise<Theme[]> {
+    const win = window as any;
+    if (win.electronAPI && win.electronAPI.steam) {
+      try {
+        const themes = await win.electronAPI.steam.getWorkshopThemes();
+        return themes;
+      } catch (err) {
+        console.error('Failed to fetch workshop themes', err);
+        return [];
+      }
+    }
+    return [];
+  }
+
+  public async uploadToWorkshop(file: File, title: string, description: string): Promise<boolean> {
+    const win = window as any;
+    if (win.electronAPI && win.electronAPI.steam) {
+      try {
+        // electron needs the file path to upload
+        // we can get the actual file path from the file object in electron
+        const filePath = (file as any).path; 
+        if (!filePath) {
+          console.error("File path is missing. This only works in the desktop app.");
+          return false;
+        }
+        await win.electronAPI.steam.uploadWorkshopTheme(filePath, title, description);
+        return true;
+      } catch (err) {
+        console.error('Failed to upload workshop theme', err);
+        return false;
+      }
+    }
+    return false;
+  }
 }
 
 export const themeService = new ThemeService();
