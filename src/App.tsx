@@ -19,12 +19,6 @@ function App() {
   const [showExercises, setShowExercises] = useState(false);
   const [showStats, setShowStats] = useState(false);
   
-  // Initialize theme service side effects if needed (already handles DOM in constructor)
-  useEffect(() => {
-    // Just touching themeService to ensure it's bundled and runs its constructor early
-    themeService.getDarkMode();
-  }, []);
-
   // Load settings from data service
   const [settings, setSettings] = useState(dataService.getSettings());
   const { sessionDuration, breakDuration, soundEnabled } = settings;

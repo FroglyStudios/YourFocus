@@ -16,6 +16,10 @@ class ThemeService {
   private isDarkMode: boolean = true;
 
   constructor() {
+    // We will initialize explicitly to ensure DOM is fully ready
+  }
+
+  public init() {
     this.loadSavedTheme();
     this.loadSavedMode();
   }
