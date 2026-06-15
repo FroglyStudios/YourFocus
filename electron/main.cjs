@@ -331,7 +331,7 @@ ipcMain.handle('get-workshop-themes', async () => {
   }
 });
 
-ipcMain.handle('upload-workshop-theme', async (event, filePath, title, description) => {
+ipcMain.handle('upload-workshop-theme', async (event, fileContent, title, description) => {
   if (!steamClient || !steamClient.workshop) throw new Error('Steam not running');
   
   try {
@@ -345,9 +345,9 @@ ipcMain.handle('upload-workshop-theme', async (event, filePath, title, descripti
       fs.mkdirSync(tempDir);
     }
     
-    // Copy the file to temp folder as theme.json
+    // Write content to temp folder as theme.json
     const destPath = path.join(tempDir, 'theme.json');
-    fs.copyFileSync(filePath, destPath);
+    fs.writeFileSync(destPath, fileContent, 'utf8');
     
     // 3. Update item
     await steamClient.workshop.updateItem(result.itemId, {

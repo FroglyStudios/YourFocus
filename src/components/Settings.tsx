@@ -60,15 +60,15 @@ const Settings: React.FC<SettingsProps> = ({
       return;
     }
     setIsUploading(true);
-    const success = await themeService.uploadToWorkshop(uploadFile, uploadTitle, uploadDescription);
+    const result = await themeService.uploadToWorkshop(uploadFile, uploadTitle, uploadDescription);
     setIsUploading(false);
-    if (success) {
+    if (result.success) {
       alert("Successfully uploaded to Steam Workshop!");
       setUploadTitle('');
       setUploadDescription('');
       setUploadFile(null);
     } else {
-      alert("Failed to upload to Steam Workshop.");
+      alert(`Failed to upload to Steam Workshop:\n\n${result.error}`);
     }
   };
 

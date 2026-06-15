@@ -126,25 +126,34 @@ class ThemeService {
     return [];
   }
 
-  public async uploadToWorkshop(file: File, title: string, description: string): Promise<boolean> {
-    const win = window as any;
-    if (win.electronAPI && win.electronAPI.steam) {
-      try {
-        // electron needs the file path to upload
-        // we can get the actual file path from the file object in electron
-        const filePath = (file as any).path; 
-        if (!filePath) {
-          console.error("File path is missing. This only works in the desktop app.");
-          return false;
-        }
-        await win.electronAPI.steam.uploadWorkshopTheme(filePath, title, description);
-        return true;
-      } catch (err) {
-        console.error('Failed to upload workshop theme', err);
-        return false;
+  public async uploadToWorkshop(file: File, title: string, description: string): Promise<{success: boolean, error?: string}> {
+    return new Promise((resolve) => {
+      const win = window as any;
+      if (!win.electronAPI || !win.electronAPI.steam) {
+        resolve({ success: false, error: "Steam API not available. Is Steam running?" });
+        return;
       }
-    }
-    return false;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result as string;
+          if (!content) {
+             resolve({ success: false, error: "File content is empty." });
+             return;
+          }
+          await win.electronAPI.steam.uploadWorkshopTheme(content, title, description);
+          resolve({ success: true });
+        } catch (err: any) {
+          console.error('Failed to upload workshop theme', err);
+          resolve({ success: false, error: err.message || String(err) });
+        }
+      };
+      reader.onerror = () => {
+        resolve({ success: false, error: "Failed to read file contents." });
+      };
+      reader.readAsText(file);
+    });
   }
 }
 

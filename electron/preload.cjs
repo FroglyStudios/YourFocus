@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     isAvailable: () => true,
     unlockAchievement: (achievementId) => ipcRenderer.invoke('unlock-achievement', achievementId),
     getWorkshopThemes: () => ipcRenderer.invoke('get-workshop-themes'),
-    uploadWorkshopTheme: (filePath, title, description) => ipcRenderer.invoke('upload-workshop-theme', filePath, title, description)
+    uploadWorkshopTheme: (fileContent, title, description) => ipcRenderer.invoke('upload-workshop-theme', fileContent, title, description)
   },
   
   // Mini Overlay mode
