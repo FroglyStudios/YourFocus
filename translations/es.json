@@ -1,0 +1,112 @@
+{
+  "app": {
+    "title": "YourFocus",
+    "subtitle": "Mantente enfocado y saludable durante tus sesiones de juego con recordatorios inteligentes de descanso"
+  },
+  "timer": {
+    "breakTime": "Tiempo de Descanso",
+    "gamingSession": "Sesión de Juego",
+    "focusTime": "Tiempo de Concentración",
+    "breakRemaining": "Descanso Restante",
+    "active": "Activo",
+    "paused": "Pausado"
+  },
+  "controls": {
+    "startFocus": "Iniciar Concentración",
+    "pause": "Pausar",
+    "reset": "Reiniciar",
+    "takeBreakNow": "Tomar Descanso Ahora",
+    "backToGaming": "Volver al Juego"
+  },
+  "buttons": {
+    "settings": "Configuración",
+    "exercises": "Ejercicios",
+    "statistics": "Estadísticas"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "quickPresets": "Preajustes Rápidos",
+    "shortGaming": "Juego Corto",
+    "standardGaming": "Juego Estándar",
+    "extendedGaming": "Juego Extendido",
+    "marathonGaming": "Juego Maratón",
+    "sessionDuration": "Duración de Sesión de Juego (minutos)",
+    "breakDuration": "Duración del Descanso (minutos)",
+    "audioNotifications": "Notificaciones de Audio",
+    "soundEnabled": "Alertas de sonido habilitadas",
+    "soundDisabled": "Alertas de sonido deshabilitadas",
+    "cancel": "Cancelar",
+    "save": "Guardar"
+  },
+  "exercises": {
+    "title": "Ejercicios de Descanso",
+    "subtitle": "Estos ejercicios ayudan a prevenir la fatiga del juego y mantener tu salud durante sesiones largas.",
+    "eyeRule": {
+      "title": "Regla 20-20-20 para Ojos",
+      "description": "Mira algo a 20 pies de distancia por 20 segundos",
+      "instructions": "Encuentra una ventana u objeto distante y enfócate en él. Esto ayuda a relajar los músculos de los ojos y prevenir la fatiga visual."
+    },
+    "neckStretch": {
+      "title": "Estiramiento de Cuello",
+      "description": "Rotaciones y estiramientos suaves del cuello",
+      "instructions": "Gira lentamente tu cabeza a la izquierda, luego a la derecha. Inclina tu cabeza hacia cada hombro. Mantén cada posición por 5 segundos."
+    },
+    "shoulderRolls": {
+      "title": "Rotaciones de Hombros",
+      "description": "Libera la tensión de los hombros",
+      "instructions": "Rueda tus hombros hacia atrás 5 veces, luego hacia adelante 5 veces. Levanta tus hombros hacia las orejas y suelta."
+    },
+    "wristStretch": {
+      "title": "Estiramiento de Muñeca",
+      "description": "Previene lesiones por esfuerzo repetitivo",
+      "instructions": "Extiende tu brazo hacia adelante, palma hacia arriba. Usa tu otra mano para tirar suavemente de tus dedos hacia atrás. Mantén por 15 segundos cada mano."
+    },
+    "markComplete": "Marcar Completo",
+    "completed": "¡Completado!",
+    "greatJob": "¡Buen trabajo! Has completado todos los ejercicios.",
+    "backToGaming": "Volver al Juego",
+    "skipForNow": "Omitir por Ahora",
+    "continue": "Continuar"
+  },
+  "statistics": {
+    "title": "Tus Estadísticas de Concentración",
+    "totalSessions": "Sesiones Totales",
+    "focusTime": "Tiempo de Concentración",
+    "breakStreak": "Racha de Descansos",
+    "todaySessions": "Sesiones de Hoy",
+    "sessionsCompleted": "sesiones de juego completadas",
+    "totalTimeFocused": "tiempo total concentrado",
+    "consecutiveBreaks": "descansos consecutivos tomados",
+    "sessionsToday": "sesiones completadas hoy",
+    "focusInsights": "Perspectivas de Concentración",
+    "averageSession": "Sesión Promedio",
+    "totalBreakTime": "Tiempo Total de Descanso",
+    "totalBreaks": "Descansos Totales",
+    "achievements": "Logros",
+    "firstSessionComplete": "¡Primera Sesión Completa!",
+    "focusBeginner": "Principiante de Concentración (5+ sesiones)",
+    "focusExpert": "Experto en Concentración (25+ sesiones)",
+    "breakChampion": "Campeón de Descansos (5+ racha)",
+    "startFirstSession": "¡Inicia tu primera sesión para desbloquear logros!",
+    "close": "Cerrar"
+  },
+  "notifications": {
+    "breakComplete": "¡Descanso Completo! 🎮",
+    "breakCompleteBody": "Es hora de volver a tu juego. ¡Mantente concentrado!",
+    "sessionComplete": "¡Sesión Completa! 🧘‍♂️",
+    "sessionCompleteBody": "Es hora de un descanso saludable. ¡Tus ojos y cuerpo te lo agradecerán!"
+  },
+  "achievements": {
+    "firstLaunch": "¡Bienvenido a YourFocus!",
+    "firstLaunchDesc": "Has abierto YourFocus por primera vez",
+    "firstSession": "Primeros Pasos",
+    "firstSessionDesc": "Completaste tu primera sesión de juego",
+    "dedicated": "Jugador Dedicado",
+    "dedicatedDesc": "Completaste 5 sesiones de juego",
+    "focused": "Jugador Concentrado",
+    "focusedDesc": "Completaste 10 sesiones de juego",
+    "master": "Maestro de la Concentración",
+    "masterDesc": "Completaste 20 sesiones de juego"
+  }
+}

@@ -30,48 +30,6 @@ const Settings: React.FC<SettingsProps> = ({
   const [activeThemeName, setActiveThemeName] = useState<string | null>(themeService.getActiveTheme()?.name || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Workshop States
-  const [workshopThemes, setWorkshopThemes] = useState<any[]>([]);
-  const [isLoadingWorkshop, setIsLoadingWorkshop] = useState(false);
-  const [uploadTitle, setUploadTitle] = useState('');
-  const [uploadDescription, setUploadDescription] = useState('');
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    loadWorkshopThemes();
-  }, []);
-
-  const loadWorkshopThemes = async () => {
-    setIsLoadingWorkshop(true);
-    const themes = await themeService.fetchWorkshopThemes();
-    setWorkshopThemes(themes);
-    setIsLoadingWorkshop(false);
-  };
-
-  const applyWorkshopTheme = (theme: any) => {
-    themeService.applyTheme(theme);
-    setActiveThemeName(theme.name);
-  };
-
-  const handleWorkshopUpload = async () => {
-    if (!uploadFile || !uploadTitle.trim()) {
-      alert("Please provide a title and select a theme file.");
-      return;
-    }
-    setIsUploading(true);
-    const result = await themeService.uploadToWorkshop(uploadFile, uploadTitle, uploadDescription);
-    setIsUploading(false);
-    if (result.success) {
-      alert("Successfully uploaded to Steam Workshop!");
-      setUploadTitle('');
-      setUploadDescription('');
-      setUploadFile(null);
-    } else {
-      alert(`Failed to upload to Steam Workshop:\n\n${result.error}`);
-    }
-  };
-
   const handleSave = () => {
     dataService.updateSettings({
       customSessionSound,
@@ -197,74 +155,6 @@ const Settings: React.FC<SettingsProps> = ({
                 <Upload className="w-4 h-4" />
                 <span className="font-medium">Import theme.json</span>
               </label>
-            </div>
-
-            {/* Steam Workshop Themes */}
-            <div className="mt-6 pt-6 border-t border-theme-border space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-theme-text flex items-center gap-2">
-                  Workshop Themes
-                </span>
-                <button 
-                  onClick={loadWorkshopThemes} 
-                  disabled={isLoadingWorkshop}
-                  className="text-xs text-theme-primary bg-theme-primary/10 px-2 py-1 rounded-lg hover:bg-theme-primary/20 transition-colors disabled:opacity-50"
-                >
-                  {isLoadingWorkshop ? 'Loading...' : 'Refresh'}
-                </button>
-              </div>
-              
-              <div className="space-y-2">
-                {workshopThemes.length === 0 ? (
-                  <p className="text-sm text-theme-muted italic text-center p-4 bg-theme-surface rounded-xl border border-theme-border">No subscribed workshop themes found.</p>
-                ) : (
-                  workshopThemes.map((theme, i) => (
-                    <button
-                      key={i}
-                      onClick={() => applyWorkshopTheme(theme)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${activeThemeName === theme.name ? 'border-theme-primary bg-theme-primary/10' : 'border-theme-border bg-theme-surface hover:border-theme-primary/50'}`}
-                    >
-                      <span className="font-medium text-theme-text">{theme.name}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-
-              {/* Upload to Workshop */}
-              <div className="pt-4 mt-4 border-t border-theme-border/50">
-                <span className="font-semibold text-theme-text block mb-3 text-sm">Publish to Steam Workshop</span>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Theme Title"
-                    value={uploadTitle}
-                    onChange={(e) => setUploadTitle(e.target.value)}
-                    className="w-full p-2 text-sm bg-theme-surface border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-1 focus:ring-theme-primary"
-                  />
-                  <textarea
-                    placeholder="Theme Description"
-                    value={uploadDescription}
-                    onChange={(e) => setUploadDescription(e.target.value)}
-                    className="w-full p-2 text-sm bg-theme-surface border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-1 focus:ring-theme-primary resize-none"
-                    rows={2}
-                  />
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="file" 
-                      accept=".json"
-                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                      className="text-xs text-theme-text file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:bg-theme-primary/10 file:text-theme-primary hover:file:bg-theme-primary/20 w-full"
-                    />
-                  </div>
-                  <button
-                    onClick={handleWorkshopUpload}
-                    disabled={isUploading}
-                    className="w-full p-2 mt-2 bg-theme-primary/20 text-theme-primary hover:bg-theme-primary/30 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
-                  >
-                    {isUploading ? 'Uploading...' : 'Publish Theme'}
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 

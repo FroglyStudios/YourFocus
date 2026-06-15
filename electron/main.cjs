@@ -13,74 +13,44 @@ try {
   console.log('Discord RPC not available in main process');
 }
 
-// Initialize Steam with greenworks
-let greenworks = null;
-let steamInitialized = false;
+// Initialize Steam with steamworks.js
+let steamworks = null;
+let steamClient = null;
 
 try {
-  greenworks = require('greenworks');
+  steamworks = require('steamworks.js');
+  // Initialize Steam (automatically reads from steam_appid.txt if present)
+  steamClient = steamworks.init();
+  
+  console.log('[Steamworks] Steam API initialized successfully');
 
-  if (greenworks.initAPI()) {
-    console.log('[Greenworks] Steam API initialized successfully');
-    steamInitialized = true;
-
-    // Unlock firstLaunch achievement
-    const achievementId = 'firstLaunch';
-
-    greenworks.getAchievement(achievementId, (achieved) => {
-      if (!achieved) {
-        greenworks.activateAchievement(achievementId, () => {
-          console.log(`[Greenworks] Achievement unlocked: ${achievementId}`);
-        }, (err) => {
-          console.error(`[Greenworks] Failed to unlock achievement ${achievementId}:`, err);
-        });
-      } else {
-        console.log(`[Greenworks] Achievement already unlocked: ${achievementId}`);
-      }
-    }, (err) => {
-      console.error(`[Greenworks] Failed to check achievement ${achievementId}:`, err);
-
-      greenworks.activateAchievement(achievementId, () => {
-        console.log(`[Greenworks] Achievement unlocked: ${achievementId}`);
-      }, (err) => {
-        console.error(`[Greenworks] Failed to unlock achievement ${achievementId}:`, err);
-      });
-    });
-
-    // IPC Handler for unlocking achievements from renderer
-    ipcMain.handle('unlock-achievement', (_, id) => {
-      return new Promise((resolve) => {
-        if (!steamInitialized || !greenworks) {
-          console.log('[Greenworks] Steam not initialized');
-          resolve(false);
-          return;
-        }
-
-        greenworks.getAchievement(id, (achieved) => {
-          if (!achieved) {
-            greenworks.activateAchievement(id, () => {
-              console.log(`[Greenworks] Achievement unlocked: ${id}`);
-              resolve(true);
-            }, (err) => {
-              console.error(`[Greenworks] Failed to unlock achievement ${id}:`, err);
-              resolve(false);
-            });
-          } else {
-            console.log(`[Greenworks] Achievement already unlocked: ${id}`);
-            resolve(true);
-          }
-        }, (err) => {
-          console.error(`[Greenworks] Failed to check achievement ${id}:`, err);
-          resolve(false);
-        });
-      });
-    });
-
-  } else {
-    console.log('[Greenworks] Failed to initialize Steam API');
+  // Unlock firstLaunch achievement
+  const achievementId = 'firstLaunch';
+  try {
+    if (steamClient.achievement.activate(achievementId)) {
+      console.log(`[Steamworks] Achievement unlocked: ${achievementId}`);
+    }
+  } catch (err) {
+    console.error(`[Steamworks] Failed to unlock achievement ${achievementId}:`, err);
   }
+
+  // IPC Handler for unlocking achievements from renderer
+  ipcMain.handle('unlock-achievement', (_, id) => {
+    try {
+      if (!steamClient) return false;
+      const success = steamClient.achievement.activate(id);
+      if (success) {
+        console.log(`[Steamworks] Achievement unlocked: ${id}`);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error(`[Steamworks] Failed to unlock achievement ${id}:`, err);
+      return false;
+    }
+  });
 } catch (error) {
-  console.log('[Greenworks] Not available:', error.message);
+  console.log('[Steamworks] Not available or failed to initialize:', error.message);
 }
 
 // Keep a global reference of the window object
@@ -258,6 +228,145 @@ ipcMain.handle('show-notification', async (event, title, body) => {
 
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
+});
+
+// Mini-Overlay Widget logic
+let miniWindow = null;
+
+function createMiniWindow() {
+  if (miniWindow) return;
+  
+  miniWindow = new BrowserWindow({
+    width: 280,
+    height: 120,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      enableRemoteModule: false,
+      preload: path.join(__dirname, 'preload.cjs')
+    }
+  });
+
+  if (isDev) {
+    miniWindow.loadURL('http://localhost:5173/?mini=true');
+  } else {
+    miniWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: 'mini=true', search: 'mini=true' });
+  }
+
+  miniWindow.on('closed', () => {
+    miniWindow = null;
+  });
+}
+
+ipcMain.handle('toggle-mini-mode', (event) => {
+  if (!miniWindow) {
+    createMiniWindow();
+  }
+  
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+  
+  if (miniWindow) {
+    miniWindow.show();
+  }
+  return true;
+});
+
+ipcMain.handle('close-mini-mode', (event) => {
+  if (miniWindow) {
+    miniWindow.hide();
+  }
+  
+  if (mainWindow) {
+    mainWindow.show();
+  }
+  return true;
+});
+
+// Sync timer state from main window to mini window
+ipcMain.on('update-mini-timer', (event, state) => {
+  if (miniWindow && miniWindow.isVisible()) {
+    miniWindow.webContents.send('sync-mini-timer', state);
+  }
+});
+// Steam Workshop handlers
+ipcMain.handle('get-workshop-themes', async () => {
+  if (!steamClient || !steamClient.workshop) return [];
+  
+  try {
+    const items = steamClient.workshop.getSubscribedItems();
+    const themes = [];
+    
+    for (const itemId of items) {
+      const info = steamClient.workshop.installInfo(itemId);
+      if (info && info.folder) {
+        // Read folder for .json files
+        const files = fs.readdirSync(info.folder);
+        for (const file of files) {
+          if (file.endsWith('.json')) {
+            try {
+              const content = fs.readFileSync(path.join(info.folder, file), 'utf8');
+              const theme = JSON.parse(content);
+              if (theme.colors && theme.colors['--theme-bg']) {
+                theme.workshopId = itemId.toString(); // Store ID to know it's from workshop
+                themes.push(theme);
+              }
+            } catch (err) {
+              console.error('Error reading theme from workshop', err);
+            }
+          }
+        }
+      }
+    }
+    return themes;
+  } catch (error) {
+    console.error('Error fetching workshop themes:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('upload-workshop-theme', async (event, fileContent, title, description) => {
+  if (!steamClient || !steamClient.workshop) throw new Error('Steam not running');
+  
+  try {
+    // 1. Create item
+    const appId = steamClient.utils.getAppId();
+    const result = await steamClient.workshop.createItem(appId);
+    
+    // 2. Create temp folder for content
+    const tempDir = path.join(app.getPath('userData'), 'temp_workshop_upload');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    
+    // Write content to temp folder as theme.json
+    const destPath = path.join(tempDir, 'theme.json');
+    fs.writeFileSync(destPath, fileContent, 'utf8');
+    
+    // 3. Update item
+    await steamClient.workshop.updateItem(result.itemId, {
+      title,
+      description,
+      contentPath: tempDir,
+      tags: ['Theme'],
+      visibility: 0 // Public
+    });
+    
+    // Clean up
+    fs.unlinkSync(destPath);
+    fs.rmdirSync(tempDir);
+    
+    return true;
+  } catch (error) {
+    console.error('Error uploading to workshop:', error);
+    throw error;
+  }
 });
 
 // Discord RPC handlers

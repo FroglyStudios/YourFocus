@@ -1,0 +1,12 @@
+{
+  "name": "Cyberpunk Neon",
+  "colors": {
+    "--theme-bg": "#0a0a0c",
+    "--theme-surface": "rgba(20, 10, 30, 0.7)",
+    "--theme-border": "rgba(255, 0, 255, 0.4)",
+    "--theme-text": "#00ffcc",
+    "--theme-muted": "#ff00ff",
+    "--theme-primary": "#ff0055",
+    "--theme-primary-hover": "#ff3377"
+  }
+}

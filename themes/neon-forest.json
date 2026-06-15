@@ -1,0 +1,12 @@
+{
+  "name": "Neon Forest",
+  "colors": {
+    "--theme-bg": "#05120a",
+    "--theme-surface": "rgba(10, 30, 15, 0.6)",
+    "--theme-border": "rgba(34, 197, 94, 0.3)",
+    "--theme-text": "#dcfce7",
+    "--theme-muted": "#86efac",
+    "--theme-primary": "#10b981",
+    "--theme-primary-hover": "#34d399"
+  }
+}

@@ -31,7 +31,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Steam integration
   steam: {
     isAvailable: () => true,
-    unlockAchievement: (achievementId) => ipcRenderer.invoke('unlock-achievement', achievementId)
+    unlockAchievement: (achievementId) => ipcRenderer.invoke('unlock-achievement', achievementId),
+    getWorkshopThemes: () => ipcRenderer.invoke('get-workshop-themes'),
+    uploadWorkshopTheme: (fileContent, title, description) => ipcRenderer.invoke('upload-workshop-theme', fileContent, title, description)
+  },
+  
+  // Mini Overlay mode
+  mini: {
+    toggle: () => ipcRenderer.invoke('toggle-mini-mode'),
+    close: () => ipcRenderer.invoke('close-mini-mode'),
+    updateTimer: (state) => ipcRenderer.send('update-mini-timer', state),
+    onTimerUpdate: (callback) => ipcRenderer.on('sync-mini-timer', (_event, state) => callback(state))
   }
 });
 
