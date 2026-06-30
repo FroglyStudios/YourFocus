@@ -1,6 +1,6 @@
 # YourFocus
 
-![header](https://github.com/user-attachments/assets/9fa76bcc-5745-4dba-aa08-201acb33050b)
+<img width="1080" height="1350" alt="YourFocus is now on steam!" src="https://github.com/user-attachments/assets/46bbdbd5-323c-417a-bd0d-127fb26abb85" />
 
 Stay focused and healthy during long gaming sessions with smart break reminders and mini-exercises. 
 
@@ -62,6 +62,7 @@ Discord: https://discord.gg/TmMqBTKfvv
 ## Source Code
 
 This is the official source code of YourFocus.
+Feel free to build it yourself to use on macos or linux.
 
 ### Build
 #### How to build?
@@ -74,7 +75,7 @@ npm run dist
 ## Support
 > We do no support any updates and fixes. Due to beeing a little project of a student to learn steamsdk, typescript and discordrpc > we can no longer support it. There might be updates but we do not provide official support.
 > Feel free to pull requests with new features, bug fixes or more and we will take a look on it asap.
-> Thanks for this journey and the amazing more than 7.500 users in the first week!
+> Thanks for this journey and the amazing more than 7.500 users in the first day!
 
 ## Contributing
 
