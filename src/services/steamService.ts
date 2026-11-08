@@ -9,7 +9,7 @@ declare global {
   interface Window {
     electronAPI?: {
       steam?: {
-        isAvailable: () => boolean;
+        isAvailable: () => Promise<{ available: boolean; username?: string }> | boolean;
         unlockAchievement: (achievementId: string) => Promise<boolean>;
       };
     };
@@ -29,8 +29,21 @@ class SteamService {
       { id: 'master', name: 'Focus Master', description: 'Completed 20 sessions', unlocked: false }
     ];
 
-    this.isConnected = window.electronAPI?.steam?.isAvailable() || false;
+    this.initConnection();
     this.loadLocalAchievements();
+  }
+
+  private async initConnection(): Promise<void> {
+    try {
+      const res = await window.electronAPI?.steam?.isAvailable();
+      if (typeof res === 'boolean') {
+        this.isConnected = res;
+      } else if (res && typeof res === 'object') {
+        this.isConnected = Boolean(res.available);
+      }
+    } catch {
+      this.isConnected = false;
+    }
   }
 
   public isSteamRunning(): boolean {

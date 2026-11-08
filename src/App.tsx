@@ -11,8 +11,6 @@ import { useTranslation } from './hooks/useTranslation';
 import { dataService } from './services/dataService';
 import { discordService } from './services/discordService';
 
-import { themeService } from './services/themeService';
-
 function App() {
   const { t, isLoaded } = useTranslation();
   const [showSettings, setShowSettings] = useState(false);

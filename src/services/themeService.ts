@@ -1,5 +1,8 @@
 export interface Theme {
   name: string;
+  workshopId?: string;
+  description?: string;
+  author?: string;
   colors: {
     '--theme-bg': string;
     '--theme-surface': string;
@@ -9,6 +12,26 @@ export interface Theme {
     '--theme-primary': string;
     '--theme-primary-hover': string;
   };
+}
+
+export interface WorkshopStatus {
+  available: boolean;
+  username?: string;
+  appId?: number;
+}
+
+export interface WorkshopThemesResult {
+  themes: Theme[];
+  isSteamRunning: boolean;
+  username?: string;
+  error?: string;
+}
+
+export interface WorkshopUploadResult {
+  success: boolean;
+  itemId?: string;
+  needsAgreement?: boolean;
+  error?: string;
 }
 
 class ThemeService {
@@ -112,25 +135,51 @@ class ThemeService {
     });
   }
 
-  public async fetchWorkshopThemes(): Promise<Theme[]> {
+  public async getSteamStatus(): Promise<WorkshopStatus> {
+    const win = window as any;
+    if (win.electronAPI && win.electronAPI.steam && win.electronAPI.steam.isAvailable) {
+      try {
+        const res = await win.electronAPI.steam.isAvailable();
+        if (typeof res === 'boolean') {
+          return { available: res };
+        }
+        return res || { available: false };
+      } catch {
+        return { available: false };
+      }
+    }
+    return { available: false };
+  }
+
+  public async fetchWorkshopThemes(): Promise<WorkshopThemesResult> {
     const win = window as any;
     if (win.electronAPI && win.electronAPI.steam) {
       try {
-        const themes = await win.electronAPI.steam.getWorkshopThemes();
-        return themes;
-      } catch (err) {
+        const res = await win.electronAPI.steam.getWorkshopThemes();
+        if (Array.isArray(res)) {
+          const status = await this.getSteamStatus();
+          return { themes: res, isSteamRunning: status.available, username: status.username };
+        }
+        return {
+          themes: res.themes || [],
+          isSteamRunning: Boolean(res.isSteamRunning),
+          username: res.username,
+          error: res.error
+        };
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
         console.error('Failed to fetch workshop themes', err);
-        return [];
+        return { themes: [], isSteamRunning: false, error: errorMsg };
       }
     }
-    return [];
+    return { themes: [], isSteamRunning: false, error: 'Steam API not available' };
   }
 
-  public async uploadToWorkshop(file: File, title: string, description: string): Promise<{success: boolean, error?: string}> {
+  public async uploadToWorkshop(file: File, title: string, description: string): Promise<WorkshopUploadResult> {
     return new Promise((resolve) => {
       const win = window as any;
       if (!win.electronAPI || !win.electronAPI.steam) {
-        resolve({ success: false, error: "Steam API not available. Is Steam running?" });
+        resolve({ success: false, error: "Steam API not available. Is the desktop app running?" });
         return;
       }
 
@@ -142,11 +191,20 @@ class ThemeService {
              resolve({ success: false, error: "File content is empty." });
              return;
           }
-          await win.electronAPI.steam.uploadWorkshopTheme(content, title, description);
-          resolve({ success: true });
-        } catch (err: any) {
+          const result = await win.electronAPI.steam.uploadWorkshopTheme(content, title, description);
+          if (result && typeof result === 'object') {
+            resolve({ 
+              success: Boolean(result.success), 
+              itemId: result.itemId,
+              needsAgreement: Boolean(result.needsToAcceptAgreement) 
+            });
+          } else {
+            resolve({ success: true });
+          }
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
           console.error('Failed to upload workshop theme', err);
-          resolve({ success: false, error: err.message || String(err) });
+          resolve({ success: false, error: errorMsg });
         }
       };
       reader.onerror = () => {
@@ -154,6 +212,15 @@ class ThemeService {
       };
       reader.readAsText(file);
     });
+  }
+
+  public openExternal(url: string) {
+    const win = window as any;
+    if (win.electronAPI && win.electronAPI.steam && win.electronAPI.steam.openExternal) {
+      win.electronAPI.steam.openExternal(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 }
 

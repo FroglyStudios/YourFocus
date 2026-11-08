@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Save, Volume2, VolumeX, Moon, Sun, Upload, Trash2, MessageCircle } from 'lucide-react';
+import { X, Save, Volume2, VolumeX, Moon, Sun, Upload, Trash2, MessageCircle, ExternalLink, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
-import { themeService } from '../services/themeService';
+import { themeService, Theme } from '../services/themeService';
 import { dataService } from '../services/dataService';
 
 interface SettingsProps {
@@ -31,8 +31,11 @@ const Settings: React.FC<SettingsProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Workshop States
-  const [workshopThemes, setWorkshopThemes] = useState<any[]>([]);
+  const [workshopThemes, setWorkshopThemes] = useState<Theme[]>([]);
   const [isLoadingWorkshop, setIsLoadingWorkshop] = useState(false);
+  const [isSteamRunning, setIsSteamRunning] = useState<boolean | null>(null);
+  const [steamUsername, setSteamUsername] = useState<string | null>(null);
+  const [workshopError, setWorkshopError] = useState<string | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -44,31 +47,61 @@ const Settings: React.FC<SettingsProps> = ({
 
   const loadWorkshopThemes = async () => {
     setIsLoadingWorkshop(true);
-    const themes = await themeService.fetchWorkshopThemes();
-    setWorkshopThemes(themes);
-    setIsLoadingWorkshop(false);
+    setWorkshopError(null);
+    try {
+      const result = await themeService.fetchWorkshopThemes();
+      setWorkshopThemes(result.themes);
+      setIsSteamRunning(result.isSteamRunning);
+      setSteamUsername(result.username || null);
+      if (result.error && !result.isSteamRunning) {
+        setWorkshopError(result.error);
+      }
+    } catch (err) {
+      console.error('Failed to load workshop themes:', err);
+      setIsSteamRunning(false);
+      setWorkshopError(err instanceof Error ? err.message : 'Error communicating with Steam');
+    } finally {
+      setIsLoadingWorkshop(false);
+    }
   };
 
-  const applyWorkshopTheme = (theme: any) => {
+  const applyWorkshopTheme = (theme: Theme) => {
     themeService.applyTheme(theme);
     setActiveThemeName(theme.name);
   };
 
   const handleWorkshopUpload = async () => {
     if (!uploadFile || !uploadTitle.trim()) {
-      alert("Please provide a title and select a theme file.");
+      alert("Please provide a title and select a theme file (.json).");
       return;
     }
     setIsUploading(true);
-    const result = await themeService.uploadToWorkshop(uploadFile, uploadTitle, uploadDescription);
-    setIsUploading(false);
-    if (result.success) {
-      alert("Successfully uploaded to Steam Workshop!");
-      setUploadTitle('');
-      setUploadDescription('');
-      setUploadFile(null);
-    } else {
-      alert(`Failed to upload to Steam Workshop:\n\n${result.error}`);
+    try {
+      const result = await themeService.uploadToWorkshop(uploadFile, uploadTitle, uploadDescription);
+      if (result.success) {
+        if (result.needsAgreement) {
+          alert(
+            "Theme successfully uploaded to Steam Workshop!\n\n" +
+            "Note: Steam requires that you accept the Steam Workshop Legal Agreement before other users can see your item.\n" +
+            "Opening the agreement page in your browser..."
+          );
+          themeService.openExternal('https://steamcommunity.com/sharedfiles/workshoplegalagreement');
+        } else {
+          alert("Successfully uploaded to Steam Workshop!");
+        }
+        setUploadTitle('');
+        setUploadDescription('');
+        setUploadFile(null);
+        // Refresh themes so the new theme appears immediately
+        await loadWorkshopThemes();
+      } else {
+        alert(`Failed to upload to Steam Workshop:\n\n${result.error}`);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert(`Upload error: ${message}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -201,67 +234,229 @@ const Settings: React.FC<SettingsProps> = ({
 
             {/* Steam Workshop Themes */}
             <div className="mt-6 pt-6 border-t border-theme-border space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-theme-text flex items-center gap-2">
-                  Workshop Themes
-                </span>
-                <button 
-                  onClick={loadWorkshopThemes} 
-                  disabled={isLoadingWorkshop}
-                  className="text-xs text-theme-primary bg-theme-primary/10 px-2 py-1 rounded-lg hover:bg-theme-primary/20 transition-colors disabled:opacity-50"
-                >
-                  {isLoadingWorkshop ? 'Loading...' : 'Refresh'}
-                </button>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-theme-text text-sm sm:text-base">
+                    Steam Workshop Themes
+                  </span>
+                  {isSteamRunning === true && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {steamUsername ? steamUsername : 'Online'}
+                    </span>
+                  )}
+                  {isSteamRunning === false && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      <AlertCircle className="w-3 h-3" />
+                      Offline
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => themeService.openExternal('https://steamcommunity.com/app/4037900/workshop/')}
+                    className="text-xs text-theme-muted hover:text-theme-primary bg-theme-surface hover:bg-theme-border px-2.5 py-1 rounded-lg border border-theme-border transition-colors inline-flex items-center gap-1"
+                    title="Open Workshop in Browser"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span>Workshop</span>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={loadWorkshopThemes} 
+                    disabled={isLoadingWorkshop}
+                    className="text-xs text-theme-primary bg-theme-primary/10 hover:bg-theme-primary/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 font-medium"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isLoadingWorkshop ? 'animate-spin' : ''}`} />
+                    <span>{isLoadingWorkshop ? 'Lade...' : 'Refresh'}</span>
+                  </button>
+                </div>
               </div>
               
               <div className="space-y-2">
-                {workshopThemes.length === 0 ? (
-                  <p className="text-sm text-theme-muted italic text-center p-4 bg-theme-surface rounded-xl border border-theme-border">No subscribed workshop themes found.</p>
-                ) : (
-                  workshopThemes.map((theme, i) => (
+                {isSteamRunning === false ? (
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center space-y-2">
+                    <AlertCircle className="w-6 h-6 text-amber-500 mx-auto" />
+                    <p className="text-sm font-semibold text-theme-text">Steam ist nicht gestartet</p>
+                    <p className="text-xs text-theme-muted max-w-sm mx-auto">
+                      Bitte starte den Steam Desktop-Client und melde dich an, um Workshop-Themes zu nutzen oder neue hochzuladen.
+                    </p>
+                    {workshopError && (
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400 font-mono bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/20 max-w-xs mx-auto truncate" title={workshopError}>
+                        {workshopError}
+                      </p>
+                    )}
                     <button
-                      key={i}
-                      onClick={() => applyWorkshopTheme(theme)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${activeThemeName === theme.name ? 'border-theme-primary bg-theme-primary/10' : 'border-theme-border bg-theme-surface hover:border-theme-primary/50'}`}
+                      type="button"
+                      onClick={loadWorkshopThemes}
+                      disabled={isLoadingWorkshop}
+                      className="mt-1 px-3 py-1.5 bg-theme-surface hover:bg-theme-border border border-theme-border rounded-xl text-xs font-medium text-theme-text transition-all inline-flex items-center gap-1.5"
                     >
-                      <span className="font-medium text-theme-text">{theme.name}</span>
+                      <RefreshCw className={`w-3.5 h-3.5 ${isLoadingWorkshop ? 'animate-spin' : ''}`} />
+                      Verbindung wiederholen
                     </button>
-                  ))
+                  </div>
+                ) : isLoadingWorkshop ? (
+                  <div className="p-6 text-center text-sm text-theme-muted flex items-center justify-center gap-2 bg-theme-surface rounded-2xl border border-theme-border">
+                    <RefreshCw className="w-4 h-4 animate-spin text-theme-primary" />
+                    <span>Prüfe Workshop-Abonnements & lade Themes...</span>
+                  </div>
+                ) : workshopThemes.length === 0 ? (
+                  <div className="p-5 bg-theme-surface rounded-2xl border border-theme-border text-center space-y-2.5">
+                    <p className="text-sm text-theme-muted italic">Keine abonnierten Workshop-Themes gefunden.</p>
+                    <p className="text-xs text-theme-muted">
+                      Abonniere Themes im Steam Workshop oder veröffentliche unten dein eigenes Design.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => themeService.openExternal('https://steamcommunity.com/app/4037900/workshop/')}
+                      className="px-3.5 py-1.5 bg-theme-primary/10 hover:bg-theme-primary/20 text-theme-primary rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 border border-theme-primary/20"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Workshop öffnen
+                    </button>
+                  </div>
+                ) : (
+                  workshopThemes.map((theme, i) => {
+                    const isActive = activeThemeName === theme.name;
+                    return (
+                      <div
+                        key={theme.workshopId || i}
+                        className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                          isActive 
+                            ? 'border-theme-primary bg-theme-primary/10' 
+                            : 'border-theme-border bg-theme-surface hover:border-theme-primary/50'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => applyWorkshopTheme(theme)}
+                          className="flex-1 text-left flex items-center gap-3 overflow-hidden"
+                        >
+                          {/* Color preview dots */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <span 
+                              className="w-3.5 h-3.5 rounded-full border border-black/20" 
+                              style={{ backgroundColor: theme.colors['--theme-bg'] }} 
+                            />
+                            <span 
+                              className="w-3.5 h-3.5 rounded-full border border-black/20" 
+                              style={{ backgroundColor: theme.colors['--theme-primary'] }} 
+                            />
+                            <span 
+                              className="w-3.5 h-3.5 rounded-full border border-black/20" 
+                              style={{ backgroundColor: theme.colors['--theme-surface'] }} 
+                            />
+                          </div>
+
+                          <div className="truncate">
+                            <span className="font-medium text-theme-text text-sm block truncate">
+                              {theme.name}
+                            </span>
+                            {isActive && (
+                              <span className="text-[10px] text-theme-primary font-semibold uppercase tracking-wider">
+                                Aktiv
+                              </span>
+                            )}
+                          </div>
+                        </button>
+
+                        {theme.workshopId && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              themeService.openExternal(`https://steamcommunity.com/sharedfiles/filedetails/?id=${theme.workshopId}`);
+                            }}
+                            className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-primary/10 rounded-lg transition-colors ml-2"
+                            title="Auf Steam anzeigen"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
 
               {/* Upload to Workshop */}
               <div className="pt-4 mt-4 border-t border-theme-border/50">
-                <span className="font-semibold text-theme-text block mb-3 text-sm">Publish to Steam Workshop</span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-theme-text text-sm">Theme im Steam Workshop veröffentlichen</span>
+                </div>
+
+                {isSteamRunning === false && (
+                  <p className="text-xs text-amber-500 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 mb-3">
+                    Steam muss gestartet sein, um Themes im Workshop hochzuladen.
+                  </p>
+                )}
+
                 <div className="space-y-3">
                   <input
                     type="text"
-                    placeholder="Theme Title"
+                    placeholder="Theme Titel"
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
-                    className="w-full p-2 text-sm bg-theme-surface border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-1 focus:ring-theme-primary"
+                    disabled={isUploading || isSteamRunning === false}
+                    className="w-full p-2.5 text-sm bg-theme-surface border border-theme-border rounded-xl text-theme-text focus:outline-none focus:ring-1 focus:ring-theme-primary disabled:opacity-50"
                   />
                   <textarea
-                    placeholder="Theme Description"
+                    placeholder="Theme Beschreibung"
                     value={uploadDescription}
                     onChange={(e) => setUploadDescription(e.target.value)}
-                    className="w-full p-2 text-sm bg-theme-surface border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-1 focus:ring-theme-primary resize-none"
+                    disabled={isUploading || isSteamRunning === false}
+                    className="w-full p-2.5 text-sm bg-theme-surface border border-theme-border rounded-xl text-theme-text focus:outline-none focus:ring-1 focus:ring-theme-primary resize-none disabled:opacity-50"
                     rows={2}
                   />
+                  
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="file" 
-                      accept=".json"
-                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                      className="text-xs text-theme-text file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:bg-theme-primary/10 file:text-theme-primary hover:file:bg-theme-primary/20 w-full"
-                    />
+                    <label className={`flex-1 flex items-center justify-center gap-2 p-2.5 border-2 border-dashed border-theme-border text-theme-muted hover:text-theme-primary hover:border-theme-primary hover:bg-theme-primary/5 rounded-xl cursor-pointer transition-all text-xs font-medium ${isUploading || isSteamRunning === false ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <Upload className="w-4 h-4" />
+                      <span className="truncate max-w-[200px]">
+                        {uploadFile ? uploadFile.name : 'Theme JSON auswählen (.json)'}
+                      </span>
+                      <input 
+                        type="file" 
+                        accept=".json"
+                        onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                        disabled={isUploading || isSteamRunning === false}
+                        className="hidden" 
+                      />
+                    </label>
+
+                    {uploadFile && (
+                      <button
+                        type="button"
+                        onClick={() => setUploadFile(null)}
+                        disabled={isUploading}
+                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors border border-red-500/20"
+                        title="Datei entfernen"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
+
                   <button
+                    type="button"
                     onClick={handleWorkshopUpload}
-                    disabled={isUploading}
-                    className="w-full p-2 mt-2 bg-theme-primary/20 text-theme-primary hover:bg-theme-primary/30 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+                    disabled={isUploading || isSteamRunning === false || !uploadFile || !uploadTitle.trim()}
+                    className="w-full p-2.5 mt-2 bg-theme-primary hover:bg-theme-primaryHover text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
                   >
-                    {isUploading ? 'Uploading...' : 'Publish Theme'}
+                    {isUploading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Wird bei Steam hochgeladen...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>Im Steam Workshop veröffentlichen</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

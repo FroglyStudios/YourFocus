@@ -14,44 +14,87 @@ try {
 }
 
 // Initialize Steam with steamworks.js
+const STEAM_APP_ID = 4037900;
 let steamworks = null;
 let steamClient = null;
 
-try {
-  steamworks = require('steamworks.js');
-  // Initialize Steam (automatically reads from steam_appid.txt if present)
-  steamClient = steamworks.init();
-  
-  console.log('[Steamworks] Steam API initialized successfully');
-
-  // Unlock firstLaunch achievement
-  const achievementId = 'firstLaunch';
+function initSteam() {
+  if (steamClient) return steamClient;
   try {
-    if (steamClient.achievement.activate(achievementId)) {
-      console.log(`[Steamworks] Achievement unlocked: ${achievementId}`);
+    if (!steamworks) {
+      steamworks = require('steamworks.js');
     }
-  } catch (err) {
-    console.error(`[Steamworks] Failed to unlock achievement ${achievementId}:`, err);
-  }
-
-  // IPC Handler for unlocking achievements from renderer
-  ipcMain.handle('unlock-achievement', (_, id) => {
+    // Try explicit App ID first, fallback to steam_appid.txt
     try {
-      if (!steamClient) return false;
-      const success = steamClient.achievement.activate(id);
-      if (success) {
-        console.log(`[Steamworks] Achievement unlocked: ${id}`);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error(`[Steamworks] Failed to unlock achievement ${id}:`, err);
-      return false;
+      steamClient = steamworks.init(STEAM_APP_ID);
+    } catch (e1) {
+      steamClient = steamworks.init();
     }
-  });
-} catch (error) {
-  console.log('[Steamworks] Not available or failed to initialize:', error.message);
+    console.log('[Steamworks] Steam API initialized successfully');
+
+    // Unlock firstLaunch achievement
+    try {
+      if (steamClient.achievement && steamClient.achievement.activate('firstLaunch')) {
+        console.log('[Steamworks] Achievement unlocked: firstLaunch');
+      }
+    } catch (achErr) {
+      console.warn('[Steamworks] Failed to unlock firstLaunch achievement:', achErr.message);
+    }
+
+    return steamClient;
+  } catch (error) {
+    console.log('[Steamworks] Steam not running or not available:', error.message);
+    steamClient = null;
+    return null;
+  }
 }
+
+// Attempt initial Steam connection
+initSteam();
+
+// IPC Handler for unlocking achievements from renderer
+ipcMain.handle('unlock-achievement', (_, id) => {
+  try {
+    const client = initSteam();
+    if (!client || !client.achievement) return false;
+    const success = client.achievement.activate(id);
+    if (success) {
+      console.log(`[Steamworks] Achievement unlocked: ${id}`);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error(`[Steamworks] Failed to unlock achievement ${id}:`, err);
+    return false;
+  }
+});
+
+// IPC Handler for checking Steam status
+ipcMain.handle('is-steam-available', () => {
+  const client = initSteam();
+  if (!client) {
+    return { available: false };
+  }
+  let username = '';
+  try {
+    username = client.localplayer ? client.localplayer.getName() : '';
+  } catch (e) {}
+
+  return {
+    available: true,
+    username,
+    appId: client.utils ? client.utils.getAppId() : STEAM_APP_ID
+  };
+});
+
+// IPC Handler for opening external URLs safely
+ipcMain.handle('open-external', async (_, url) => {
+  if (url && (url.startsWith('https://') || url.startsWith('http://') || url.startsWith('steam://'))) {
+    await shell.openExternal(url);
+    return true;
+  }
+  return false;
+});
 
 // Keep a global reference of the window object
 let mainWindow;
@@ -297,75 +340,183 @@ ipcMain.on('update-mini-timer', (event, state) => {
 });
 // Steam Workshop handlers
 ipcMain.handle('get-workshop-themes', async () => {
-  if (!steamClient || !steamClient.workshop) return [];
+  const client = initSteam();
+  if (!client || !client.workshop) {
+    return { success: false, themes: [], isSteamRunning: false, error: 'Steam is not running' };
+  }
   
+  let username = '';
   try {
-    const items = steamClient.workshop.getSubscribedItems();
+    username = client.localplayer ? client.localplayer.getName() : '';
+  } catch (e) {}
+
+  try {
+    const items = client.workshop.getSubscribedItems();
+    console.log('[Workshop] Subscribed Items:', items.map(id => id.toString()));
     const themes = [];
     
     for (const itemId of items) {
-      const info = steamClient.workshop.installInfo(itemId);
-      if (info && info.folder) {
-        // Read folder for .json files
-        const files = fs.readdirSync(info.folder);
-        for (const file of files) {
-          if (file.endsWith('.json')) {
-            try {
-              const content = fs.readFileSync(path.join(info.folder, file), 'utf8');
-              const theme = JSON.parse(content);
-              if (theme.colors && theme.colors['--theme-bg']) {
-                theme.workshopId = itemId.toString(); // Store ID to know it's from workshop
-                themes.push(theme);
-              }
-            } catch (err) {
-              console.error('Error reading theme from workshop', err);
+      let state = client.workshop.state(itemId);
+      let isInstalled = (state & 4) !== 0;
+      let needsUpdate = (state & 8) !== 0;
+      
+      console.log(`[Workshop] Item ${itemId} State: ${state} (Installed: ${isInstalled}, NeedsUpdate: ${needsUpdate})`);
+
+      // If missing or needs update, trigger download and wait briefly for completion
+      if (!isInstalled || needsUpdate) {
+        console.log(`[Workshop] Forcing download for ${itemId}...`);
+        try {
+          client.workshop.download(itemId, true);
+        } catch (dlErr) {
+          console.warn(`[Workshop] Could not trigger download for ${itemId}:`, dlErr);
+        }
+
+        // Wait briefly (up to 3.5 seconds) for small theme file download to finish
+        const startTime = Date.now();
+        while (Date.now() - startTime < 3500) {
+          await new Promise(r => setTimeout(r, 250));
+          try {
+            state = client.workshop.state(itemId);
+            isInstalled = (state & 4) !== 0;
+            if (isInstalled) {
+              console.log(`[Workshop] Item ${itemId} download finished successfully.`);
+              break;
             }
+          } catch (e) {
+            break;
           }
         }
       }
+
+      const info = client.workshop.installInfo(itemId);
+      console.log(`[Workshop] Item ${itemId} Install Info:`, info);
+      
+      if (info && info.folder && fs.existsSync(info.folder)) {
+        try {
+          const files = fs.readdirSync(info.folder);
+          for (const file of files) {
+            if (file.endsWith('.json')) {
+              try {
+                const content = fs.readFileSync(path.join(info.folder, file), 'utf8');
+                const theme = JSON.parse(content);
+                if (theme.colors && theme.colors['--theme-bg']) {
+                  theme.workshopId = itemId.toString();
+                  if (!theme.name) {
+                    theme.name = path.basename(file, '.json');
+                  }
+                  themes.push(theme);
+                }
+              } catch (err) {
+                console.error(`[Workshop] Error reading theme file ${file} from workshop:`, err);
+              }
+            }
+          }
+        } catch (dirErr) {
+          console.error(`[Workshop] Error reading folder for item ${itemId}:`, dirErr);
+        }
+      }
     }
-    return themes;
+    return { success: true, themes, isSteamRunning: true, username };
   } catch (error) {
     console.error('Error fetching workshop themes:', error);
-    return [];
+    return { success: false, themes: [], isSteamRunning: true, error: error.message || String(error), username };
   }
 });
 
 ipcMain.handle('upload-workshop-theme', async (event, fileContent, title, description) => {
-  if (!steamClient || !steamClient.workshop) throw new Error('Steam not running');
+  const client = initSteam();
+  if (!client || !client.workshop) {
+    throw new Error('Steam is not running. Please start the Steam desktop client and ensure you are logged in.');
+  }
   
+  // Validate theme JSON before doing any Steam operations
+  let parsedTheme;
   try {
-    // 1. Create item
-    const appId = steamClient.utils.getAppId();
-    const result = await steamClient.workshop.createItem(appId);
+    parsedTheme = JSON.parse(fileContent);
+    if (!parsedTheme.colors || !parsedTheme.colors['--theme-bg']) {
+      throw new Error('Invalid theme format: missing theme color palette (--theme-bg).');
+    }
+    if (!parsedTheme.name && title) {
+      parsedTheme.name = title;
+      fileContent = JSON.stringify(parsedTheme, null, 2);
+    }
+  } catch (jsonErr) {
+    throw new Error('Theme file is invalid JSON: ' + jsonErr.message);
+  }
+
+  const appId = client.utils ? client.utils.getAppId() : STEAM_APP_ID;
+  const tempDir = path.join(app.getPath('userData'), `temp_workshop_upload_${Date.now()}`);
+
+  try {
+    // 1. Create workshop item
+    console.log(`[Workshop] Creating item for App ID: ${appId}`);
+    const result = await client.workshop.createItem(appId);
+    console.log(`[Workshop] Created item: ${result.itemId}, NeedsAgreement: ${result.needsToAcceptAgreement}`);
     
     // 2. Create temp folder for content
-    const tempDir = path.join(app.getPath('userData'), 'temp_workshop_upload');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir);
-    }
+    fs.mkdirSync(tempDir, { recursive: true });
     
     // Write content to temp folder as theme.json
     const destPath = path.join(tempDir, 'theme.json');
     fs.writeFileSync(destPath, fileContent, 'utf8');
+
+    // Copy icon as workshop thumbnail preview if available
+    const iconCandidates = [
+      path.join(__dirname, 'assets', 'icon.png'),
+      path.join(__dirname, '../public', 'icon.png')
+    ];
+    let previewFilePath = null;
+    for (const cand of iconCandidates) {
+      if (fs.existsSync(cand)) {
+        const targetPreview = path.join(tempDir, 'preview.png');
+        fs.copyFileSync(cand, targetPreview);
+        previewFilePath = targetPreview;
+        break;
+      }
+    }
     
-    // 3. Update item
-    await steamClient.workshop.updateItem(result.itemId, {
-      title,
-      description,
+    // 3. Update workshop item details
+    const updateDetails = {
+      title: title || parsedTheme.name || 'Custom Theme',
+      description: description || 'Theme for YourFocus',
       contentPath: tempDir,
       tags: ['Theme'],
       visibility: 0 // Public
-    });
+    };
+
+    if (previewFilePath) {
+      updateDetails.previewPath = previewFilePath;
+    }
+
+    console.log(`[Workshop] Updating item ${result.itemId}...`);
+    await client.workshop.updateItem(result.itemId, updateDetails, appId);
+    console.log(`[Workshop] Item ${result.itemId} updated successfully!`);
+
+    // Auto-subscribe creator to the item so it immediately appears in their themes
+    try {
+      await client.workshop.subscribe(result.itemId);
+      console.log(`[Workshop] Auto-subscribed to item ${result.itemId}`);
+    } catch (subErr) {
+      console.warn(`[Workshop] Auto-subscribe warning:`, subErr);
+    }
     
-    // Clean up
-    fs.unlinkSync(destPath);
-    fs.rmdirSync(tempDir);
-    
-    return true;
+    return {
+      success: true,
+      itemId: result.itemId.toString(),
+      needsToAcceptAgreement: Boolean(result.needsToAcceptAgreement)
+    };
   } catch (error) {
     console.error('Error uploading to workshop:', error);
     throw error;
+  } finally {
+    // Always clean up temp folder
+    try {
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+    } catch (cleanErr) {
+      console.error('Error cleaning up temp directory:', cleanErr);
+    }
   }
 });
 
