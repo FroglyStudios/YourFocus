@@ -449,11 +449,31 @@ ipcMain.handle('upload-workshop-theme', async (event, fileContent, title, descri
 
   try {
     // 1. Create workshop item
-    console.log(`[Workshop] Creating item for App ID: ${appId}`);
-    const result = await client.workshop.createItem(appId);
-    console.log(`[Workshop] Created item: ${result.itemId}, NeedsAgreement: ${result.needsToAcceptAgreement}`);
+    console.log(`[Workshop] Step 1: Creating item for App ID: ${appId}`);
+    let result;
+    try {
+      result = await client.workshop.createItem(appId);
+      console.log(`[Workshop] Created item: ${result.itemId}, NeedsAgreement: ${result.needsToAcceptAgreement}`);
+    } catch (createErr) {
+      console.error('[Workshop] createItem failed:', createErr);
+      const errMsg = createErr && createErr.message ? createErr.message : String(createErr);
+      if (errMsg.toLowerCase().includes('limit exceeded')) {
+        throw new Error(
+          'Steam Cloud Quota überschritten ("limit exceeded").\n\n' +
+          'Ursache: In Steamworks ist das "Speicherplatzkontingent pro Benutzer" (Byte quota per user) noch auf 0 Bytes eingestellt.\n\n' +
+          'Lösung im Steamworks Partner Portal:\n' +
+          '1. Gehe auf partner.steamgames.com -> App 4037900\n' +
+          '2. "Steamworks-Einstellungen bearbeiten" -> Reiter "Steam Cloud"\n' +
+          '3. "Speicherplatzkontingent pro Benutzer" auf z. B. 104857600 Bytes (100 MB) oder 1073741824 Bytes (1 GB) setzen\n' +
+          '4. "Zulässige Dateianzahl pro Benutzer" auf z. B. 1000 setzen\n' +
+          '5. Speichern und im Tab "Veröffentlichen" die Änderung live schalten!'
+        );
+      }
+      throw createErr;
+    }
     
     // 2. Create temp folder for content
+    console.log(`[Workshop] Step 2: Preparing upload directory: ${tempDir}`);
     fs.mkdirSync(tempDir, { recursive: true });
     
     // Write content to temp folder as theme.json
@@ -476,6 +496,7 @@ ipcMain.handle('upload-workshop-theme', async (event, fileContent, title, descri
     }
     
     // 3. Update workshop item details
+    console.log(`[Workshop] Step 3: Updating item details for ${result.itemId}`);
     const updateDetails = {
       title: title || parsedTheme.name || 'Custom Theme',
       description: description || 'Theme for YourFocus',
@@ -488,9 +509,20 @@ ipcMain.handle('upload-workshop-theme', async (event, fileContent, title, descri
       updateDetails.previewPath = previewFilePath;
     }
 
-    console.log(`[Workshop] Updating item ${result.itemId}...`);
-    await client.workshop.updateItem(result.itemId, updateDetails, appId);
-    console.log(`[Workshop] Item ${result.itemId} updated successfully!`);
+    try {
+      await client.workshop.updateItem(result.itemId, updateDetails, appId);
+      console.log(`[Workshop] Item ${result.itemId} updated successfully!`);
+    } catch (updateErr) {
+      console.error('[Workshop] updateItem failed:', updateErr);
+      const updateMsg = updateErr && updateErr.message ? updateErr.message : String(updateErr);
+      if (updateMsg.toLowerCase().includes('limit exceeded')) {
+        throw new Error(
+          'Steam Cloud Quota überschritten ("limit exceeded") beim Hochladen der Theme-Dateien.\n' +
+          'Bitte erhöhe das Steam Cloud Kontingent im Steamworks-Portal auf mindestens 100 MB.'
+        );
+      }
+      throw updateErr;
+    }
 
     // Auto-subscribe creator to the item so it immediately appears in their themes
     try {

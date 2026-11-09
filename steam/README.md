@@ -35,17 +35,23 @@ Erstellen Sie folgende Assets für den Steam Store:
 
 ### 5. Build für Steam
 ```bash
-# Setzen Sie Ihre Steam App ID
-export STEAM_APP_ID=YOUR_APP_ID
-
-# Build für Steam
+# Production-Build erstellen (Vite + Electron)
 npm run build-electron
-```
 
-### 6. Steam Depot Setup
-- Erstellen Sie Depots für Windows, macOS, Linux
-- Laden Sie die gebauten Executables hoch
-- Testen Sie mit Steam SDK
+# Oder Windows-Build erstellen:
+npm run build && npx electron-builder --win
+```
+Die gebauten Binaries befinden sich danach in `dist-electron/win-unpacked/`.
+
+### 6. Steam Depot Setup & Upload (SteamPipe)
+- Vorlagen für SteamPipe befinden sich in `steam/scripts/`:
+  - `app_build_4037900.vdf`
+  - `depot_build_4037901.vdf`
+- Upload mit SteamCMD ausführen:
+```bash
+steamcmd +login <USERNAME> +run_app_build steam/scripts/app_build_4037900.vdf +quit
+```
+Alternativ: Über den Web-Uploader im Steamworks-Portal unter **SteamPipe -> Builds**.
 
 ### 7. Testing
 - Verwenden Sie Steam SDK für lokale Tests

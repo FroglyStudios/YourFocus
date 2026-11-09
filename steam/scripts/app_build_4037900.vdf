@@ -1,0 +1,13 @@
+"AppBuild"
+{
+	"AppID" "4037900"
+	"Desc" "YourFocus v0.5.0 Build"
+	"SetLive" "" // Leave blank or set to "default"
+	"ContentRoot" "..\..\dist-electron\win-unpacked\"
+	"BuildOutput" "..\..\dist-electron\steampipe_output\"
+	"Depots"
+	{
+		"4037901" "depot_build_4037901.vdf"
+	}
+}
+
