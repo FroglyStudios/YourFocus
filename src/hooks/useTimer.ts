@@ -1,12 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-export const useTimer = (sessionDuration: number, breakDuration: number) => {
+export interface UseTimerCallbacks {
+  onSessionComplete?: (duration: number) => void;
+  onBreakComplete?: (duration: number) => void;
+}
+
+export const useTimer = (
+  sessionDuration: number, 
+  breakDuration: number,
+  callbacks?: UseTimerCallbacks
+) => {
   const [timeLeft, setTimeLeft] = useState(sessionDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [currentSession, setCurrentSession] = useState(1);
 
-  // Reset timer when durations change
+  // Keep latest callbacks in refs to avoid interval tear-down/race conditions
+  const callbacksRef = useRef<UseTimerCallbacks | undefined>(callbacks);
+  useEffect(() => {
+    callbacksRef.current = callbacks;
+  }, [callbacks]);
+
+  const sessionDurationRef = useRef(sessionDuration);
+  useEffect(() => {
+    sessionDurationRef.current = sessionDuration;
+  }, [sessionDuration]);
+
+  const breakDurationRef = useRef(breakDuration);
+  useEffect(() => {
+    breakDurationRef.current = breakDuration;
+  }, [breakDuration]);
+
+  // Reset timer when durations change while not running
   useEffect(() => {
     if (!isRunning) {
       setTimeLeft(isBreak ? breakDuration * 60 : sessionDuration * 60);
@@ -17,29 +42,36 @@ export const useTimer = (sessionDuration: number, breakDuration: number) => {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (isRunning && timeLeft > 0) {
+    if (isRunning) {
       interval = setInterval(() => {
-        setTimeLeft(timeLeft => timeLeft - 1);
+        setTimeLeft((prev) => {
+          if (prev > 1) {
+            return prev - 1;
+          }
+
+          // prev is 1 -> timer reaches 0 right now!
+          if (isBreak) {
+            // Break completed -> notify and reset for next session
+            callbacksRef.current?.onBreakComplete?.(breakDurationRef.current);
+            setIsBreak(false);
+            setIsRunning(false);
+            setCurrentSession((s) => s + 1);
+            return sessionDurationRef.current * 60;
+          } else {
+            // Focus session completed -> notify and reset for break
+            callbacksRef.current?.onSessionComplete?.(sessionDurationRef.current);
+            setIsBreak(true);
+            setIsRunning(false);
+            return breakDurationRef.current * 60;
+          }
+        });
       }, 1000);
-    } else if (timeLeft === 0 && isRunning) {
-      // Timer completed
-      setIsRunning(false);
-      if (isBreak) {
-        // Break completed, start new session
-        setIsBreak(false);
-        setCurrentSession(prev => prev + 1);
-        setTimeLeft(sessionDuration * 60);
-      } else {
-        // Session completed, start break
-        setIsBreak(true);
-        setTimeLeft(breakDuration * 60);
-      }
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, timeLeft, isBreak, sessionDuration, breakDuration]);
+  }, [isRunning, isBreak]);
 
   const startTimer = useCallback(() => {
     setIsRunning(true);

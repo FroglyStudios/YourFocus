@@ -76,15 +76,186 @@ ipcMain.handle('is-steam-available', () => {
     return { available: false };
   }
   let username = '';
+  let steamId = '';
   try {
     username = client.localplayer ? client.localplayer.getName() : '';
+    if (client.localplayer && client.localplayer.getSteamId) {
+      const idObj = client.localplayer.getSteamId();
+      steamId = idObj ? (idObj.steamId64 ? idObj.steamId64.toString() : idObj.steamId32) : '';
+    }
   } catch (e) {}
 
   return {
     available: true,
     username,
+    steamId,
     appId: client.utils ? client.utils.getAppId() : STEAM_APP_ID
   };
+});
+
+// Helper for safe integer stat retrieval
+function safeGetStat(client, statName) {
+  try {
+    if (!client || !client.stats) return 0;
+    const val = client.stats.getInt(statName);
+    return typeof val === 'number' ? val : 0;
+  } catch (err) {
+    return 0;
+  }
+}
+
+// Helper for safe integer stat storage
+function safeSetStat(client, statName, val) {
+  try {
+    if (!client || !client.stats) return false;
+    return client.stats.setInt(statName, Math.floor(val));
+  } catch (err) {
+    console.warn(`[Steamworks] Could not set stat "${statName}":`, err.message);
+    return false;
+  }
+}
+
+// IPC Handler for reading Steam statistics
+ipcMain.handle('get-steam-stats', async () => {
+  const client = initSteam();
+  if (!client || !client.stats) {
+    return { success: false, error: 'Steam not available' };
+  }
+
+  try {
+    const hours = safeGetStat(client, 'hours');
+    const sessions = safeGetStat(client, 'sessions');
+    const focusMinutes = safeGetStat(client, 'focus_minutes');
+    const breaks = safeGetStat(client, 'breaks');
+    const streak = safeGetStat(client, 'streak');
+
+    return {
+      success: true,
+      stats: {
+        hours,
+        sessions,
+        focusMinutes,
+        breaks,
+        streak
+      }
+    };
+  } catch (error) {
+    console.error('[Steamworks] Failed to get stats:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler for updating Steam statistics
+ipcMain.handle('set-steam-stats', async (_, statsData) => {
+  const client = initSteam();
+  if (!client || !client.stats) {
+    return { success: false, error: 'Steam not available' };
+  }
+
+  try {
+    let changed = false;
+
+    if (typeof statsData.hours === 'number') {
+      if (safeSetStat(client, 'hours', statsData.hours)) changed = true;
+    }
+    if (typeof statsData.sessions === 'number') {
+      if (safeSetStat(client, 'sessions', statsData.sessions)) changed = true;
+    }
+    if (typeof statsData.focusMinutes === 'number') {
+      if (safeSetStat(client, 'focus_minutes', statsData.focusMinutes)) changed = true;
+    }
+    if (typeof statsData.breaks === 'number') {
+      if (safeSetStat(client, 'breaks', statsData.breaks)) changed = true;
+    }
+    if (typeof statsData.streak === 'number') {
+      if (safeSetStat(client, 'streak', statsData.streak)) changed = true;
+    }
+
+    if (changed) {
+      const stored = client.stats.store();
+      console.log('[Steamworks] Stats stored successfully to Steam:', statsData);
+      return { success: true, stored };
+    }
+
+    return { success: true, stored: true };
+  } catch (error) {
+    console.error('[Steamworks] Failed to set stats:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler for fetching Steam Leaderboard data via Steam Community XML
+ipcMain.handle('get-steam-leaderboard', async (_, leaderboardName = 'focus_hours') => {
+  const client = initSteam();
+  const username = client && client.localplayer ? client.localplayer.getName() : 'You';
+  
+  return new Promise((resolve) => {
+    const https = require('https');
+    const url = `https://steamcommunity.com/stats/${STEAM_APP_ID}/leaderboards/${leaderboardName}?xml=1`;
+
+    const req = https.get(url, { headers: { 'User-Agent': 'YourFocus-SteamApp' } }, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const entries = [];
+          const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi;
+          let match;
+          while ((match = entryRegex.exec(data)) !== null && entries.length < 10) {
+            const block = match[1];
+            const steamidMatch = block.match(/<steamid>(\d+)<\/steamid>/i);
+            const scoreMatch = block.match(/<score>(\d+)<\/score>/i);
+            const rankMatch = block.match(/<rank>(\d+)<\/rank>/i);
+
+            if (scoreMatch && rankMatch) {
+              entries.push({
+                rank: parseInt(rankMatch[1], 10),
+                score: parseInt(scoreMatch[1], 10),
+                steamId: steamidMatch ? steamidMatch[1] : '',
+                name: steamidMatch ? `Player ${steamidMatch[1].slice(-4)}` : 'Gamer'
+              });
+            }
+          }
+
+          resolve({
+            success: true,
+            leaderboardName,
+            entries,
+            currentUser: username
+          });
+        } catch (err) {
+          resolve({
+            success: false,
+            leaderboardName,
+            entries: [],
+            currentUser: username,
+            error: err.message
+          });
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      resolve({
+        success: false,
+        leaderboardName,
+        entries: [],
+        currentUser: username,
+        error: err.message
+      });
+    });
+
+    req.setTimeout(5000, () => {
+      req.destroy();
+      resolve({
+        success: false,
+        leaderboardName,
+        entries: [],
+        currentUser: username,
+        error: 'Timeout fetching leaderboard'
+      });
+    });
+  });
 });
 
 // IPC Handler for opening external URLs safely
@@ -548,6 +719,211 @@ ipcMain.handle('upload-workshop-theme', async (event, fileContent, title, descri
       }
     } catch (cleanErr) {
       console.error('Error cleaning up temp directory:', cleanErr);
+    }
+  }
+});
+
+// Steam Workshop Sound Pack handlers
+ipcMain.handle('get-workshop-soundpacks', async () => {
+  const client = initSteam();
+  if (!client || !client.workshop) {
+    return { success: false, soundPacks: [], isSteamRunning: false, error: 'Steam is not running' };
+  }
+
+  let username = '';
+  try {
+    username = client.localplayer ? client.localplayer.getName() : '';
+  } catch (e) {}
+
+  try {
+    const items = client.workshop.getSubscribedItems();
+    console.log('[Workshop] Checking sound packs for items:', items.map(id => id.toString()));
+    const soundPacks = [];
+
+    for (const itemId of items) {
+      let state = client.workshop.state(itemId);
+      let isInstalled = (state & 4) !== 0;
+      let needsUpdate = (state & 8) !== 0;
+
+      if (!isInstalled || needsUpdate) {
+        try {
+          client.workshop.download(itemId, true);
+        } catch (dlErr) {}
+
+        const startTime = Date.now();
+        while (Date.now() - startTime < 3500) {
+          await new Promise(r => setTimeout(r, 250));
+          try {
+            state = client.workshop.state(itemId);
+            if ((state & 4) !== 0) break;
+          } catch (e) {
+            break;
+          }
+        }
+      }
+
+      const info = client.workshop.installInfo(itemId);
+      if (info && info.folder && fs.existsSync(info.folder)) {
+        const soundpackJsonPath = path.join(info.folder, 'soundpack.json');
+        if (fs.existsSync(soundpackJsonPath)) {
+          try {
+            const raw = fs.readFileSync(soundpackJsonPath, 'utf8');
+            const data = JSON.parse(raw);
+
+            let sessionSound = '';
+            let breakSound = '';
+
+            const sessionFile = data.sessionSound ? path.join(info.folder, data.sessionSound) : null;
+            if (sessionFile && fs.existsSync(sessionFile)) {
+              const ext = path.extname(sessionFile).toLowerCase();
+              const mime = ext === '.wav' ? 'audio/wav' : ext === '.ogg' ? 'audio/ogg' : 'audio/mpeg';
+              const b64 = fs.readFileSync(sessionFile).toString('base64');
+              sessionSound = `data:${mime};base64,${b64}`;
+            }
+
+            const breakFile = data.breakSound ? path.join(info.folder, data.breakSound) : null;
+            if (breakFile && fs.existsSync(breakFile)) {
+              const ext = path.extname(breakFile).toLowerCase();
+              const mime = ext === '.wav' ? 'audio/wav' : ext === '.ogg' ? 'audio/ogg' : 'audio/mpeg';
+              const b64 = fs.readFileSync(breakFile).toString('base64');
+              breakSound = `data:${mime};base64,${b64}`;
+            }
+
+            soundPacks.push({
+              id: itemId.toString(),
+              workshopId: itemId.toString(),
+              name: data.name || `Sound Pack #${itemId}`,
+              description: data.description || '',
+              sessionSound,
+              breakSound
+            });
+          } catch (readErr) {
+            console.error(`[Workshop] Error loading soundpack for item ${itemId}:`, readErr);
+          }
+        }
+      }
+    }
+    return { success: true, soundPacks, isSteamRunning: true, username };
+  } catch (error) {
+    console.error('Error fetching workshop sound packs:', error);
+    return { success: false, soundPacks: [], isSteamRunning: true, error: error.message || String(error), username };
+  }
+});
+
+ipcMain.handle('upload-workshop-soundpack', async (event, title, description, sessionBase64, sessionName, breakBase64, breakName) => {
+  const client = initSteam();
+  if (!client || !client.workshop) {
+    throw new Error('Steam is not running. Please start the Steam desktop client and ensure you are logged in.');
+  }
+
+  if (!title || !title.trim()) {
+    throw new Error('Please enter a title for your Sound Pack.');
+  }
+  if (!sessionBase64 || !breakBase64) {
+    throw new Error('Both Session Sound and Break Sound are required for a Sound Pack.');
+  }
+
+  const appId = client.utils ? client.utils.getAppId() : STEAM_APP_ID;
+  const tempDir = path.join(app.getPath('userData'), `temp_soundpack_upload_${Date.now()}`);
+
+  try {
+    console.log(`[Workshop] Creating Sound Pack item for App ID: ${appId}`);
+    let result;
+    try {
+      result = await client.workshop.createItem(appId);
+      console.log(`[Workshop] Created Sound Pack item: ${result.itemId}, NeedsAgreement: ${result.needsToAcceptAgreement}`);
+    } catch (createErr) {
+      console.error('[Workshop] createItem failed:', createErr);
+      const errMsg = createErr && createErr.message ? createErr.message : String(createErr);
+      if (errMsg.toLowerCase().includes('limit exceeded')) {
+        throw new Error(
+          'Steam Cloud Quota überschritten ("limit exceeded").\n\n' +
+          'Ursache: In Steamworks ist das "Speicherplatzkontingent pro Benutzer" (Byte quota per user) noch auf 0 Bytes eingestellt.\n\n' +
+          'Lösung im Steamworks Partner Portal:\n' +
+          '1. Gehe auf partner.steamgames.com -> App 4037900\n' +
+          '2. "Steamworks-Einstellungen bearbeiten" -> Reiter "Steam Cloud"\n' +
+          '3. "Speicherplatzkontingent pro Benutzer" auf z. B. 104857600 Bytes (100 MB) oder 1073741824 Bytes (1 GB) setzen\n' +
+          '4. "Zulässige Dateianzahl pro Benutzer" auf z. B. 1000 setzen\n' +
+          '5. Speichern und im Tab "Veröffentlichen" die Änderung live schalten!'
+        );
+      }
+      throw createErr;
+    }
+
+    fs.mkdirSync(tempDir, { recursive: true });
+
+    // Clean up base64 prefix
+    const cleanSessionB64 = sessionBase64.replace(/^data:audio\/\w+;base64,/, '');
+    const cleanBreakB64 = breakBase64.replace(/^data:audio\/\w+;base64,/, '');
+
+    const sFileName = sessionName || 'session.mp3';
+    const bFileName = breakName || 'break.mp3';
+
+    fs.writeFileSync(path.join(tempDir, sFileName), Buffer.from(cleanSessionB64, 'base64'));
+    fs.writeFileSync(path.join(tempDir, bFileName), Buffer.from(cleanBreakB64, 'base64'));
+
+    const soundpackMeta = {
+      type: 'soundpack',
+      name: title.trim(),
+      description: description || 'Sound Pack for YourFocus',
+      sessionSound: sFileName,
+      breakSound: bFileName
+    };
+    fs.writeFileSync(path.join(tempDir, 'soundpack.json'), JSON.stringify(soundpackMeta, null, 2), 'utf8');
+
+    // Thumbnail preview
+    const iconCandidates = [
+      path.join(__dirname, 'assets', 'icon.png'),
+      path.join(__dirname, '../public', 'icon.png')
+    ];
+    let previewFilePath = null;
+    for (const cand of iconCandidates) {
+      if (fs.existsSync(cand)) {
+        const targetPreview = path.join(tempDir, 'preview.png');
+        fs.copyFileSync(cand, targetPreview);
+        previewFilePath = targetPreview;
+        break;
+      }
+    }
+
+    const updateDetails = {
+      title: title.trim(),
+      description: description || 'Sound Pack for YourFocus',
+      contentPath: tempDir,
+      tags: ['SoundPack'],
+      visibility: 0
+    };
+
+    if (previewFilePath) {
+      updateDetails.previewPath = previewFilePath;
+    }
+
+    console.log(`[Workshop] Updating sound pack item ${result.itemId}...`);
+    await client.workshop.updateItem(result.itemId, updateDetails, appId);
+    console.log(`[Workshop] Sound pack ${result.itemId} updated successfully!`);
+
+    try {
+      await client.workshop.subscribe(result.itemId);
+      console.log(`[Workshop] Auto-subscribed to sound pack ${result.itemId}`);
+    } catch (subErr) {
+      console.warn(`[Workshop] Auto-subscribe warning:`, subErr);
+    }
+
+    return {
+      success: true,
+      itemId: result.itemId.toString(),
+      needsToAcceptAgreement: Boolean(result.needsToAcceptAgreement)
+    };
+  } catch (error) {
+    console.error('Error uploading sound pack to workshop:', error);
+    throw error;
+  } finally {
+    try {
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+    } catch (cleanErr) {
+      console.error('Error cleaning up sound pack temp directory:', cleanErr);
     }
   }
 });

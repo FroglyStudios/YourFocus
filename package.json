@@ -67,7 +67,8 @@
       "electron/**/*",
       "node_modules/**/*",
       "steam_appid.txt",
-      "themes/**/*"
+      "themes/**/*",
+      "soundpacks/**/*"
     ],
     "mac": {
       "category": "public.app-category.productivity",

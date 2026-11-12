@@ -1,3 +1,5 @@
+import { steamService } from './steamService';
+
 interface UserData {
   stats: {
     totalSessions: number;
@@ -17,6 +19,7 @@ interface UserData {
     language: string;
     customSessionSound?: string;
     customBreakSound?: string;
+    activeSoundPackId?: string;
   };
 }
 
@@ -104,6 +107,57 @@ class DataService {
     return { ...this.data.stats };
   }
 
+  public async syncWithSteam(): Promise<UserData['stats']> {
+    try {
+      const isOnline = await steamService.initConnection();
+      if (!isOnline) return this.getStats();
+
+      const steamStats = await steamService.getSteamStats();
+      if (!steamStats) return this.getStats();
+
+      let hasLocalUpdate = false;
+      const hoursInMinutes = (steamStats.hours || 0) * 60;
+      const steamFocusTime = Math.max(hoursInMinutes, steamStats.focusMinutes || 0);
+
+      // If Steam has higher values, adopt them
+      if (steamFocusTime > this.data.stats.totalFocusTime) {
+        this.data.stats.totalFocusTime = steamFocusTime;
+        hasLocalUpdate = true;
+      }
+      if ((steamStats.sessions || 0) > this.data.stats.totalSessions) {
+        this.data.stats.totalSessions = steamStats.sessions || 0;
+        hasLocalUpdate = true;
+      }
+      if ((steamStats.breaks || 0) > this.data.stats.totalBreaks) {
+        this.data.stats.totalBreaks = steamStats.breaks || 0;
+        hasLocalUpdate = true;
+      }
+      if ((steamStats.streak || 0) > this.data.stats.streak) {
+        this.data.stats.streak = steamStats.streak || 0;
+        hasLocalUpdate = true;
+      }
+
+      if (hasLocalUpdate) {
+        this.saveData();
+      }
+
+      // Push highest merged values back to Steam
+      const totalHours = Math.floor(this.data.stats.totalFocusTime / 60);
+      await steamService.setSteamStats({
+        hours: totalHours,
+        sessions: this.data.stats.totalSessions,
+        focusMinutes: this.data.stats.totalFocusTime,
+        breaks: this.data.stats.totalBreaks,
+        streak: this.data.stats.streak
+      });
+
+      return this.getStats();
+    } catch (e) {
+      console.warn('[DataService] Steam sync failed:', e);
+      return this.getStats();
+    }
+  }
+
   addSession(duration: number): void {
     const today = new Date().toDateString();
     
@@ -118,6 +172,14 @@ class DataService {
     this.checkSessionAchievements();
     
     this.saveData();
+
+    // Push stats immediately to Steam in background
+    const totalHours = Math.floor(this.data.stats.totalFocusTime / 60);
+    steamService.setSteamStats({
+      hours: totalHours,
+      sessions: this.data.stats.totalSessions,
+      focusMinutes: this.data.stats.totalFocusTime
+    }).catch(() => {});
   }
 
   addBreak(duration: number): void {
@@ -126,6 +188,12 @@ class DataService {
     this.data.stats.streak += 1;
     
     this.saveData();
+
+    // Push break & streak stats immediately to Steam
+    steamService.setSteamStats({
+      breaks: this.data.stats.totalBreaks,
+      streak: this.data.stats.streak
+    }).catch(() => {});
   }
 
   resetStreak(): void {
@@ -167,18 +235,15 @@ class DataService {
       this.data.stats.achievements.push(achievementId);
       this.saveData();
       
-      // Trigger Steam achievement if available
+      // Trigger Steam achievement
       this.triggerSteamAchievement(achievementId);
     }
   }
 
   private triggerSteamAchievement(achievementId: string): void {
-    // Steam Web API integration would go here
-    // For now, we'll just log it
-    console.log(`Steam Achievement Unlocked: ${achievementId}`);
-    
-    // In a real implementation, you would call Steam's Web API
-    // This requires Steam integration and proper authentication
+    steamService.unlockAchievement(achievementId).catch(err => {
+      console.warn(`[DataService] Achievement unlock error: ${achievementId}`, err);
+    });
   }
 
   markFirstLaunch(): void {

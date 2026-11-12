@@ -6,7 +6,18 @@ export const useStats = () => {
   const [stats, setStats] = useState(dataService.getStats());
 
   useEffect(() => {
-    setStats(dataService.getStats());
+    // Initial load and sync with Steam
+    dataService.syncWithSteam().then((syncedStats) => {
+      setStats(syncedStats);
+    }).catch(() => {
+      setStats(dataService.getStats());
+    });
+  }, []);
+
+  const syncStats = useCallback(async () => {
+    const updated = await dataService.syncWithSteam();
+    setStats(updated);
+    return updated;
   }, []);
 
   const addSession = useCallback((duration: number) => {
@@ -71,6 +82,7 @@ export const useStats = () => {
 
   return { 
     stats, 
+    syncStats,
     addSession, 
     addBreak, 
     resetStreak, 

@@ -10,6 +10,7 @@ import { useStats } from './hooks/useStats';
 import { useTranslation } from './hooks/useTranslation';
 import { dataService } from './services/dataService';
 import { discordService } from './services/discordService';
+import { soundService } from './services/soundService';
 
 function App() {
   const { t, isLoaded } = useTranslation();
@@ -21,6 +22,38 @@ function App() {
   const [settings, setSettings] = useState(dataService.getSettings());
   const { sessionDuration, breakDuration, soundEnabled } = settings;
 
+  const { requestPermission, showNotification } = useNotifications();
+  const { stats, syncStats, addSession, addBreak } = useStats();
+
+  const playSound = (type: 'session' | 'break') => {
+    soundService.play(type);
+  };
+
+  const handleSessionComplete = useCallback((duration: number) => {
+    showNotification(
+      t('notifications.sessionComplete'),
+      t('notifications.sessionCompleteBody'),
+      'break'
+    );
+    addSession(duration);
+    setShowExercises(true);
+    if (soundEnabled) {
+      playSound('break');
+    }
+  }, [showNotification, t, addSession, soundEnabled]);
+
+  const handleBreakComplete = useCallback((duration: number) => {
+    showNotification(
+      t('notifications.breakComplete'),
+      t('notifications.breakCompleteBody'),
+      'session'
+    );
+    addBreak(duration);
+    if (soundEnabled) {
+      playSound('session');
+    }
+  }, [showNotification, t, addBreak, soundEnabled]);
+
   const {
     timeLeft,
     isRunning,
@@ -31,10 +64,10 @@ function App() {
     resetTimer,
     skipToBreak,
     skipToSession
-  } = useTimer(sessionDuration, breakDuration);
-
-  const { requestPermission, showNotification } = useNotifications();
-  const { stats, addSession, addBreak } = useStats();
+  } = useTimer(sessionDuration, breakDuration, {
+    onSessionComplete: handleSessionComplete,
+    onBreakComplete: handleBreakComplete
+  });
 
   // Request notification permission on first load
   useEffect(() => {
@@ -76,48 +109,6 @@ function App() {
       win.electronAPI.mini.updateTimer({ timeLeft, isBreak, isRunning });
     }
   }, [timeLeft, isBreak, isRunning]);
-
-  // Handle timer completion
-  useEffect(() => {
-    if (timeLeft === 0 && isRunning) {
-      if (isBreak) {
-        showNotification(
-          t('notifications.breakComplete'),
-          t('notifications.breakCompleteBody'),
-          'session'
-        );
-        addSession(sessionDuration);
-        if (soundEnabled) {
-          playSound('session');
-        }
-      } else {
-        showNotification(
-          t('notifications.sessionComplete'),
-          t('notifications.sessionCompleteBody'),
-          'break'
-        );
-        addBreak(breakDuration);
-        setShowExercises(true);
-        if (soundEnabled) {
-          playSound('break');
-        }
-      }
-    }
-  }, [timeLeft, isRunning, isBreak, showNotification, sessionDuration, breakDuration, soundEnabled, addSession, addBreak, t]);
-
-  const playSound = (type: 'session' | 'break') => {
-    const audio = new Audio();
-    if (type === 'break') {
-      // Gentle chime for break time, or custom sound
-      audio.src = settings.customBreakSound || 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBg==';
-    } else {
-      // Subtle bell for session time, or custom sound
-      audio.src = settings.customSessionSound || 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBjiN2/LNeSsFJHfE8N2QQAoUXrTp66hVFApGn+DyvmgbBg==';
-    }
-    audio.play().catch(() => {
-      // Ignore errors if audio can't play
-    });
-  };
 
   const handleSettingsSave = useCallback((settings: { sessionDuration: number; breakDuration: number; soundEnabled: boolean }) => {
     dataService.updateSettings(settings);
@@ -283,6 +274,7 @@ function App() {
       {showStats && (
         <Statistics
           stats={stats}
+          onSync={syncStats}
           onClose={() => setShowStats(false)}
         />
       )}

@@ -32,8 +32,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   steam: {
     isAvailable: () => ipcRenderer.invoke('is-steam-available'),
     unlockAchievement: (achievementId) => ipcRenderer.invoke('unlock-achievement', achievementId),
+    getStats: () => ipcRenderer.invoke('get-steam-stats'),
+    setStats: (stats) => ipcRenderer.invoke('set-steam-stats', stats),
+    getLeaderboard: (name) => ipcRenderer.invoke('get-steam-leaderboard', name),
     getWorkshopThemes: () => ipcRenderer.invoke('get-workshop-themes'),
     uploadWorkshopTheme: (fileContent, title, description) => ipcRenderer.invoke('upload-workshop-theme', fileContent, title, description),
+    getWorkshopSoundPacks: () => ipcRenderer.invoke('get-workshop-soundpacks'),
+    uploadWorkshopSoundPack: (title, description, sessionBase64, sessionName, breakBase64, breakName) => 
+      ipcRenderer.invoke('upload-workshop-soundpack', title, description, sessionBase64, sessionName, breakBase64, breakName),
     openExternal: (url) => ipcRenderer.invoke('open-external', url)
   },
   
